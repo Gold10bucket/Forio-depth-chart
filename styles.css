@@ -1142,10 +1142,10 @@ body{
   -webkit-appearance: none;
   flex-shrink: 0;
 }
-.depth-prospect-status.ps-monitor { color: rgba(255,255,255,.45); border-color: rgba(255,255,255,.2); }
-.depth-prospect-status.ps-contact { color: #60a5fa; border-color: #3b82f6; background: rgba(59,130,246,.12); }
-.depth-prospect-status.ps-nego    { color: #f4b400; border-color: #f4b400; background: rgba(244,180,0,.12); }
-.depth-prospect-status.ps-reject  { color: #ff7070; border-color: #c8302a; background: rgba(200,48,42,.15); }
+.depth-prospect-status.ps-monitor { color: #1a1a1a; border-color: #aaa;    background: #aaaaaa; }
+.depth-prospect-status.ps-contact { color: #1a1a1a; border-color: #60a5fa; background: #60a5fa; }
+.depth-prospect-status.ps-nego    { color: #1a1a1a; border-color: #f4b400; background: #f4b400; }
+.depth-prospect-status.ps-reject  { color: #fff;    border-color: #c8302a; background: #c8302a; }
 
 /* prospect drag handle and move buttons */
 .prosp-drag-handle { cursor: grab; opacity: .45; font-size: 13px; }

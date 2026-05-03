@@ -257,7 +257,7 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
                            title="Transfermarkt" onClick={(e)=>e.stopPropagation()}>↗</a>
                       )}
                       <button className="row-act row-act-promote" title="Aggiungi alla rosa"
-                              onClick={(e)=>{e.stopPropagation();onConvertProspect(pr);}}>→ Rosa</button>
+                              onClick={(e)=>{e.stopPropagation();onConvertProspect(pr);}}>→</button>
                     </span>
                   </div>
                 </li>
@@ -445,8 +445,13 @@ function App() {
   };
 
   const handleReorderDepth = async (posId, playerIds) => {
+    setRoster(prev => {
+      const slot = prev[posId] || [];
+      const ordered = playerIds.map(id => slot.find(p => p.id === id)).filter(Boolean);
+      return { ...prev, [posId]: ordered };
+    });
     try { await SB.reorderPosition(posId, playerIds); }
-    catch (err) { console.error(err); showToast("Errore nel riordinamento"); }
+    catch (err) { console.error(err); showToast("Errore nel riordinamento"); reload("players"); }
   };
 
   const handleConvertConfirm = async ({ number, position }) => {
