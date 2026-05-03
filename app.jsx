@@ -88,6 +88,7 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
   const empty = players.length === 0 && rawProspects.length === 0;
   const isDropTarget = dragActive && dragActive.fromPos !== posId;
   const [dragOverIdx, setDragOverIdx] = useState(null);
+  const dragRowRef = useRef(null); // set synchronously in onDragStart, no stale-closure issues
   const [prospDragIdx, setProspDragIdx] = useState(null);
   const [prospDragOver, setProspDragOver] = useState(null);
   const [prospOrder, setProspOrder] = useState(() => {
@@ -133,9 +134,9 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
   const handleRowDrop = (e, toIdx) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!dragActive || dragActive.fromPos !== posId) return;
-    const fromIdx = players.findIndex(pl => pl.id === dragActive.playerId);
-    if (fromIdx === -1 || fromIdx === toIdx) { setDragOverIdx(null); return; }
+    const fromIdx = dragRowRef.current;
+    dragRowRef.current = null;
+    if (fromIdx === null || fromIdx === toIdx) { setDragOverIdx(null); return; }
     const reordered = [...players];
     const [moved] = reordered.splice(fromIdx, 1);
     reordered.splice(toIdx, 0, moved);
@@ -181,11 +182,12 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
                   e.stopPropagation();
                   e.dataTransfer.effectAllowed = "move";
                   e.dataTransfer.setData("text/plain", pl.id);
+                  dragRowRef.current = i; // synchronous — no React batching delay
                   onDragPlayer && onDragPlayer({ playerId: pl.id, fromPos: posId });
                 }}
-                onDragEnd={() => { setDragOverIdx(null); onDragPlayer && onDragPlayer(null); }}
+                onDragEnd={() => { dragRowRef.current = null; setDragOverIdx(null); onDragPlayer && onDragPlayer(null); }}
                 onDragOver={(e) => {
-                  if (dragActive?.fromPos === posId) { e.preventDefault(); e.stopPropagation(); setDragOverIdx(i); }
+                  if (dragRowRef.current !== null) { e.preventDefault(); e.stopPropagation(); setDragOverIdx(i); }
                 }}
                 onDrop={(e) => handleRowDrop(e, i)}
                 onClick={() => !editMode && onSetStarter(posId, pl.id)}
@@ -502,7 +504,7 @@ function App() {
   }, [prospects]);
 
   const groups = [
-    { title: "Attaccanti",     ids: ["LW", "ST", "RW"] },
+    { title: "Attaccanti",     ids: ["ST", "LW", "RW"] },
     { title: "Centrocampisti", ids: ["LCM", "CM", "RCM"] },
     { title: "Difensori",      ids: ["LB", "LCB", "RCB", "RB"] },
     { title: "Portieri",       ids: ["GK"] },
