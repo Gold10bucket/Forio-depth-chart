@@ -81,7 +81,7 @@ const PROSPECT_STATUS = {
   rejected:    { label: "Scartato",   cls: "ps-reject"  },
 };
 
-function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onEditProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode, onProspectStatusChange, onReorderDepth }) {
+function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onEditProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode, onProspectStatusChange, onReorderDepth, prospectOrder, onProspectOrderChange }) {
   const players = roster[posId] || [];
   const rawProspects = prospectsForPos || [];
   const labels = ["1ª", "2ª", "3ª", "4ª"];
@@ -91,20 +91,15 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
   const dragRowRef = useRef(null); // set synchronously in onDragStart, no stale-closure issues
   const [prospDragIdx, setProspDragIdx] = useState(null);
   const [prospDragOver, setProspDragOver] = useState(null);
-  const [prospOrder, setProspOrder] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(`pord_${posId}`) || "null"); }
-    catch { return null; }
-  });
 
   const prospects = useMemo(() => {
-    if (!prospOrder) return rawProspects;
-    const idx = new Map(prospOrder.map((id, i) => [id, i]));
+    if (!prospectOrder) return rawProspects;
+    const idx = new Map(prospectOrder.map((id, i) => [id, i]));
     return [...rawProspects].sort((a, b) => (idx.has(a.id) ? idx.get(a.id) : 999) - (idx.has(b.id) ? idx.get(b.id) : 999));
-  }, [rawProspects, prospOrder]);
+  }, [rawProspects, prospectOrder]);
 
   const saveProspOrder = (ids) => {
-    setProspOrder(ids);
-    localStorage.setItem(`pord_${posId}`, JSON.stringify(ids));
+    onProspectOrderChange && onProspectOrderChange(posId, ids);
   };
 
   const moveProspect = (id, dir) => {
@@ -337,6 +332,17 @@ function App() {
   const [editingProspect, setEditingProspect] = useState(null);
   const [converting, setConverting] = useState(null);
   const [dragInfo, setDragInfo] = useState(null);
+  const [prospectOrders, setProspectOrders] = useState(() => {
+    const out = {};
+    const keys = SB.POSITION_KEYS;
+    for (const k of keys) {
+      try {
+        const v = localStorage.getItem(`pord_${k}`);
+        if (v) out[k] = JSON.parse(v);
+      } catch (_) {}
+    }
+    return out;
+  });
   const reorderingRef = useRef(false);
 
   // ---- initial load + realtime subscription ----
@@ -458,6 +464,11 @@ function App() {
     catch (err) { console.error(err); showToast("Errore: " + err.message); }
   };
 
+  const handleProspectOrderChange = (posId, ids) => {
+    localStorage.setItem(`pord_${posId}`, JSON.stringify(ids));
+    setProspectOrders(prev => ({ ...prev, [posId]: ids }));
+  };
+
   const handleReorderDepth = async (posId, playerIds) => {
     reorderingRef.current = true;
     setRoster(prev => {
@@ -517,8 +528,16 @@ function App() {
       const targets = FANOUT[pr.category] || [];
       for (const k of targets) (out[k] = out[k] || []).push(pr);
     }
+    // Apply custom ordering per position so pitch shows the correct #1 prospect
+    for (const k of Object.keys(out)) {
+      const order = prospectOrders[k];
+      if (order) {
+        const idx = new Map(order.map((id, i) => [id, i]));
+        out[k].sort((a, b) => (idx.has(a.id) ? idx.get(a.id) : 999) - (idx.has(b.id) ? idx.get(b.id) : 999));
+      }
+    }
     return out;
-  }, [prospects]);
+  }, [prospects, prospectOrders]);
 
   const groups = [
     { title: "Attaccanti",     ids: ["ST", "LW", "RW"] },
@@ -609,7 +628,9 @@ function App() {
                              editMode={editMode}
                              onProspectStatusChange={handleProspectStatus}
                              onEditProspect={(pr) => setEditingProspect(pr)}
-                             onReorderDepth={handleReorderDepth} />
+                             onReorderDepth={handleReorderDepth}
+                             prospectOrder={prospectOrders[id] || null}
+                             onProspectOrderChange={handleProspectOrderChange} />
                 ))}
               </div>
             </div>
