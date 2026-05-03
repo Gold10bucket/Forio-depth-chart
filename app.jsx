@@ -1,7 +1,7 @@
 const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
 // ---------- visual primitives ----------
-function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer, onDropOnPos, dragActive, playerStatuses }) {
+function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer, onDropOnPos, dragActive }) {
   return (
     <div className="pitch-wrap">
       <svg className="pitch-svg" viewBox="0 0 100 140" preserveAspectRatio="none">
@@ -31,7 +31,6 @@ function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer,
         const topProspect = empty ? (prospectsByPos && prospectsByPos[p.id]?.[0]) : null;
         const isDragging = dragActive && dragActive.fromPos === p.id && dragActive.playerId === player?.id;
         const isDropTarget = dragActive && dragActive.fromPos !== p.id;
-        const pStatus = player && playerStatuses?.[player.id];
         return (
           <button
             key={p.id}
@@ -60,8 +59,6 @@ function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer,
             {prospectCount > 0 && !topProspect && (
               <span className="token-prospect-badge" title={`${prospectCount} prospect`}>+{prospectCount}</span>
             )}
-            {pStatus === "injured"   && <span className="token-status-badge token-status-inj">INF</span>}
-            {pStatus === "suspended" && <span className="token-status-badge token-status-sus">SQU</span>}
             <div className="token-name">
               <span className="token-name-pos">{p.label}</span>
               <span className="token-name-text">
@@ -77,7 +74,14 @@ function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer,
   );
 }
 
-function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode, playerStatuses, onStatusCycle, onReorderDepth }) {
+const PROSPECT_STATUS = {
+  monitoring:  { label: "Monitorato", cls: "ps-monitor" },
+  contacted:   { label: "Contattato", cls: "ps-contact" },
+  negotiating: { label: "Trattativa", cls: "ps-nego"    },
+  rejected:    { label: "Scartato",   cls: "ps-reject"  },
+};
+
+function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode, onProspectStatusChange, onReorderDepth }) {
   const players = roster[posId] || [];
   const prospects = prospectsForPos || [];
   const labels = ["1ª", "2ª", "3ª", "4ª"];
@@ -102,9 +106,6 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
     setDragOverIdx(null);
     onReorderDepth && onReorderDepth(posId, reordered.map(pl => pl.id));
   };
-
-  const STATUS_CLS   = { injured: "status-inj", suspended: "status-sus" };
-  const STATUS_LABEL = { injured: "INF", suspended: "SQU" };
 
   if (empty) {
     return (
@@ -135,11 +136,10 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
             const isYouth = pl.birthYear >= 2006;
             const isDragging = dragActive && dragActive.playerId === pl.id;
             const isDragOver = dragOverIdx === i && dragActive?.fromPos === posId && !isDragging;
-            const pStatus = playerStatuses?.[pl.id];
             return (
               <li
                 key={pl.id || pl.n}
-                className={`depth-row ${isStarter ? "is-starter" : ""} ${isYouth ? "is-youth" : ""} ${isDragging ? "is-dragging" : ""} ${isDragOver ? "is-drag-over" : ""} ${pStatus ? `has-status-${pStatus}` : ""}`}
+                className={`depth-row ${isStarter ? "is-starter" : ""} ${isYouth ? "is-youth" : ""} ${isDragging ? "is-dragging" : ""} ${isDragOver ? "is-drag-over" : ""}`}
                 draggable
                 onDragStart={(e) => {
                   e.stopPropagation();
@@ -161,11 +161,6 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
                   <span className="depth-info">{pl.info}</span>
                 </div>
                 <div className="depth-stats">
-                  <button
-                    className={`player-status-btn ${pStatus ? STATUS_CLS[pStatus] : "status-ok"}`}
-                    title={pStatus === "injured" ? "Infortunato — clicca per cambiare" : pStatus === "suspended" ? "Squalificato — clicca per cambiare" : "Disponibile — clicca per cambiare"}
-                    onClick={(e) => { e.stopPropagation(); onStatusCycle && onStatusCycle(pl.id); }}
-                  >{pStatus ? STATUS_LABEL[pStatus] : "OK"}</button>
                   <span className="depth-byear">{pl.birthYear || "—"}</span>
                   {editMode && (
                     <span className="depth-row-actions">
@@ -199,6 +194,16 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
                     <span className="depth-info">{pr.currentClub || pr.category}</span>
                   </div>
                   <div className="depth-stats">
+                    <select
+                      className={`depth-prospect-status ${(PROSPECT_STATUS[pr.status] || PROSPECT_STATUS.monitoring).cls}`}
+                      value={pr.status || "monitoring"}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => { e.stopPropagation(); onProspectStatusChange && onProspectStatusChange(pr.id, e.target.value); }}
+                    >
+                      {Object.entries(PROSPECT_STATUS).map(([k, m]) =>
+                        <option key={k} value={k}>{m.label}</option>
+                      )}
+                    </select>
                     <span className="depth-byear">{pr.birthYear || "—"}</span>
                     <span className="depth-row-actions">
                       {pr.profileUrl && (
@@ -284,10 +289,6 @@ function App() {
   const [editingProspect, setEditingProspect] = useState(null);
   const [converting, setConverting] = useState(null);
   const [dragInfo, setDragInfo] = useState(null);
-  const [playerStatuses, setPlayerStatuses] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("playerStatuses") || "{}"); }
-    catch { return {}; }
-  });
 
   // ---- initial load + realtime subscription ----
   const reload = useCallback(async (which) => {
@@ -395,18 +396,6 @@ function App() {
   const handleProspectStatus = async (id, status) => {
     try { await SB.updateProspect(id, { status }); }
     catch (err) { console.error(err); showToast("Errore: " + err.message); }
-  };
-
-  const handleStatusCycle = (playerId) => {
-    const CYCLE = { injured: "suspended", suspended: null };
-    setPlayerStatuses(prev => {
-      const next = CYCLE[prev[playerId]] ?? "injured";
-      const updated = { ...prev };
-      if (next === null) delete updated[playerId];
-      else updated[playerId] = next;
-      localStorage.setItem("playerStatuses", JSON.stringify(updated));
-      return updated;
-    });
   };
 
   const handleReorderDepth = async (posId, playerIds) => {
@@ -518,8 +507,7 @@ function App() {
                  prospectsByPos={prospectsByPos}
                  onDragPlayer={setDragInfo}
                  onDropOnPos={handleDropOnPos}
-                 dragActive={dragInfo}
-                 playerStatuses={playerStatuses} />
+                 dragActive={dragInfo} />
           <div className="pitch-legend">
             <span><i className="dot dot-starter" /> Formazione titolare</span>
             <span><i className="dot dot-bench" /> Clicca un ruolo per le gerarchie</span>
@@ -549,8 +537,7 @@ function App() {
                              dragActive={dragInfo}
                              highlight={selected === id}
                              editMode={editMode}
-                             playerStatuses={playerStatuses}
-                             onStatusCycle={handleStatusCycle}
+                             onProspectStatusChange={handleProspectStatus}
                              onReorderDepth={handleReorderDepth} />
                 ))}
               </div>
