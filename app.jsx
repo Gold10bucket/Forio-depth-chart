@@ -337,9 +337,11 @@ function App() {
   const [editingProspect, setEditingProspect] = useState(null);
   const [converting, setConverting] = useState(null);
   const [dragInfo, setDragInfo] = useState(null);
+  const reorderingRef = useRef(false);
 
   // ---- initial load + realtime subscription ----
   const reload = useCallback(async (which) => {
+    if (reorderingRef.current) return; // suppress intermediate reloads during reorder
     try {
       if (!which || which === "players") {
         const rows = await SB.fetchAll();
@@ -447,13 +449,18 @@ function App() {
   };
 
   const handleReorderDepth = async (posId, playerIds) => {
+    reorderingRef.current = true;
     setRoster(prev => {
       const slot = prev[posId] || [];
       const ordered = playerIds.map(id => slot.find(p => p.id === id)).filter(Boolean);
       return { ...prev, [posId]: ordered };
     });
     try { await SB.reorderPosition(posId, playerIds); }
-    catch (err) { console.error(err); showToast("Errore nel riordinamento"); reload("players"); }
+    catch (err) { console.error(err); showToast("Errore nel riordinamento"); }
+    finally {
+      reorderingRef.current = false;
+      reload("players");
+    }
   };
 
   const handleConvertConfirm = async ({ number, position }) => {
