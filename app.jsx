@@ -81,13 +81,49 @@ const PROSPECT_STATUS = {
   rejected:    { label: "Scartato",   cls: "ps-reject"  },
 };
 
-function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode, onProspectStatusChange, onReorderDepth }) {
+function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onEditProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode, onProspectStatusChange, onReorderDepth }) {
   const players = roster[posId] || [];
-  const prospects = prospectsForPos || [];
+  const rawProspects = prospectsForPos || [];
   const labels = ["1ª", "2ª", "3ª", "4ª"];
-  const empty = players.length === 0 && prospects.length === 0;
+  const empty = players.length === 0 && rawProspects.length === 0;
   const isDropTarget = dragActive && dragActive.fromPos !== posId;
   const [dragOverIdx, setDragOverIdx] = useState(null);
+  const [prospDragIdx, setProspDragIdx] = useState(null);
+  const [prospDragOver, setProspDragOver] = useState(null);
+  const [prospOrder, setProspOrder] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`pord_${posId}`) || "null"); }
+    catch { return null; }
+  });
+
+  const prospects = useMemo(() => {
+    if (!prospOrder) return rawProspects;
+    const idx = new Map(prospOrder.map((id, i) => [id, i]));
+    return [...rawProspects].sort((a, b) => (idx.has(a.id) ? idx.get(a.id) : 999) - (idx.has(b.id) ? idx.get(b.id) : 999));
+  }, [rawProspects, prospOrder]);
+
+  const saveProspOrder = (ids) => {
+    setProspOrder(ids);
+    localStorage.setItem(`pord_${posId}`, JSON.stringify(ids));
+  };
+
+  const moveProspect = (id, dir) => {
+    const ids = prospects.map(p => p.id);
+    const i = ids.indexOf(id);
+    if (dir === "up"   && i > 0)              { [ids[i-1], ids[i]] = [ids[i], ids[i-1]]; }
+    if (dir === "down" && i < ids.length - 1) { [ids[i], ids[i+1]] = [ids[i+1], ids[i]]; }
+    saveProspOrder(ids);
+  };
+
+  const handleProspDrop = (e, toIdx) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (prospDragIdx === null || prospDragIdx === toIdx) { setProspDragIdx(null); setProspDragOver(null); return; }
+    const ids = prospects.map(p => p.id);
+    const [moved] = ids.splice(prospDragIdx, 1);
+    ids.splice(toIdx, 0, moved);
+    setProspDragIdx(null); setProspDragOver(null);
+    saveProspOrder(ids);
+  };
 
   const cardDragHandlers = {
     onDragOver: (e) => { if (dragActive && dragActive.fromPos !== posId) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; } },
@@ -181,13 +217,19 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
             <span className="depth-prospect-rule" />
           </div>
           <ol className="depth-list depth-list-prospect">
-            {prospects.map((pr) => {
+            {prospects.map((pr, pi) => {
               const isYouth = pr.birthYear >= 2006;
+              const isDraggingP = prospDragIdx === pi;
+              const isDragOverP = prospDragOver === pi && !isDraggingP;
               return (
                 <li key={pr.id}
-                    className={`depth-row depth-row-prospect ${isYouth ? "is-youth" : ""}`}
-                    title={`${pr.category}${pr.currentClub ? " · " + pr.currentClub : ""}`}>
-                  <span className="depth-rank depth-rank-prospect">OSS</span>
+                    className={`depth-row depth-row-prospect ${isYouth ? "is-youth" : ""} ${isDraggingP ? "is-dragging" : ""} ${isDragOverP ? "is-drag-over" : ""}`}
+                    draggable
+                    onDragStart={(e) => { e.stopPropagation(); e.dataTransfer.effectAllowed = "move"; setProspDragIdx(pi); }}
+                    onDragEnd={(e) => { e.stopPropagation(); setProspDragIdx(null); setProspDragOver(null); }}
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setProspDragOver(pi); }}
+                    onDrop={(e) => handleProspDrop(e, pi)}>
+                  <span className="depth-rank depth-rank-prospect prosp-drag-handle" title="Trascina per riordinare">⠿</span>
                   <span className="depth-num depth-num-prospect">★</span>
                   <div className="depth-meta">
                     <span className="depth-name">{pr.name}</span>
@@ -206,12 +248,16 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
                     </select>
                     <span className="depth-byear">{pr.birthYear || "—"}</span>
                     <span className="depth-row-actions">
+                      <button className="row-act prosp-move" title="Su"   onClick={(e)=>{e.stopPropagation();moveProspect(pr.id,"up");}}>↑</button>
+                      <button className="row-act prosp-move" title="Giù"  onClick={(e)=>{e.stopPropagation();moveProspect(pr.id,"down");}}>↓</button>
+                      <button className="row-act" title="Info e note"
+                              onClick={(e)=>{e.stopPropagation();onEditProspect && onEditProspect(pr);}}>ℹ</button>
                       {pr.profileUrl && (
                         <a className="row-act" href={pr.profileUrl} target="_blank" rel="noopener noreferrer"
-                           title="Visualizza profilo" onClick={(e)=>e.stopPropagation()}>↗</a>
+                           title="Transfermarkt" onClick={(e)=>e.stopPropagation()}>↗</a>
                       )}
                       <button className="row-act row-act-promote" title="Aggiungi alla rosa"
-                              onClick={(e)=>{e.stopPropagation();onConvertProspect(pr);}}>→</button>
+                              onClick={(e)=>{e.stopPropagation();onConvertProspect(pr);}}>→ Rosa</button>
                     </span>
                   </div>
                 </li>
@@ -538,6 +584,7 @@ function App() {
                              highlight={selected === id}
                              editMode={editMode}
                              onProspectStatusChange={handleProspectStatus}
+                             onEditProspect={(pr) => setEditingProspect(pr)}
                              onReorderDepth={handleReorderDepth} />
                 ))}
               </div>

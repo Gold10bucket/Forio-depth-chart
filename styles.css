@@ -1146,3 +1146,10 @@ body{
 .depth-prospect-status.ps-contact { color: #60a5fa; border-color: #3b82f6; background: rgba(59,130,246,.12); }
 .depth-prospect-status.ps-nego    { color: #f4b400; border-color: #f4b400; background: rgba(244,180,0,.12); }
 .depth-prospect-status.ps-reject  { color: #ff7070; border-color: #c8302a; background: rgba(200,48,42,.15); }
+
+/* prospect drag handle and move buttons */
+.prosp-drag-handle { cursor: grab; opacity: .45; font-size: 13px; }
+.prosp-drag-handle:active { cursor: grabbing; }
+.row-act.prosp-move { opacity: .5; font-size: 10px; padding: 0 2px; }
+.row-act.prosp-move:hover { opacity: 1; }
+.row-act.row-act-promote { font-size: 8px; padding: 1px 4px; white-space: nowrap; }
