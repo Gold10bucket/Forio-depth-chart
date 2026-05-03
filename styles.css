@@ -1084,12 +1084,12 @@ body{
 /* ---- prospect-fill token (empty slot with a prospect) ---- */
 .token.is-prospect-fill { cursor: pointer; }
 .token.is-prospect-fill .token-shirt {
-  background: linear-gradient(135deg, #c8302a 0%, #c8302a 50%, #f5ead6 50%, #f5ead6 100%);
+  background: linear-gradient(135deg, #f4b400 0%, #f4b400 50%, #c8302a 50%, #c8302a 100%);
   border-color: rgba(255,255,255,.4);
 }
 .token.is-prospect-fill .token-stripes { display: none; }
-.token.is-prospect-fill .token-num { color: #f5ead6; mix-blend-mode: normal; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
-.tone-night .token.is-prospect-fill .token-num { color: #f5ead6; }
+.token.is-prospect-fill .token-num { color: #fff; mix-blend-mode: normal; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.tone-night .token.is-prospect-fill .token-num { color: #fff; }
 
 /* ---- player status badge on pitch token ---- */
 .token-status-badge {
