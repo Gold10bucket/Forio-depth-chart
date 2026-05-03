@@ -1156,3 +1156,40 @@ body{
 .row-act.prosp-move { opacity: .5; font-size: 10px; padding: 0 2px; }
 .row-act.prosp-move:hover { opacity: 1; }
 .row-act.row-act-promote { font-size: 8px; padding: 1px 4px; white-space: nowrap; }
+
+/* ---- TM URL step ---- */
+.tm-url-step { padding: 4px 0 8px; display: flex; flex-direction: column; gap: 14px; }
+.tm-url-hint { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.tm-url-row  { display: flex; gap: 8px; }
+.tm-url-input {
+  flex: 1; min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--line); border-radius: 6px;
+  font-size: 13px; background: var(--cream); color: var(--ink);
+}
+.tm-url-input:focus { outline: none; border-color: var(--accent); }
+.tm-url-error {
+  font-size: 12px; color: #c8302a; line-height: 1.6;
+  padding: 8px 10px; border-radius: 5px;
+  background: rgba(200,48,42,.06); border: 1px solid rgba(200,48,42,.18);
+}
+.tm-url-cmd {
+  display: block; margin-top: 6px;
+  font-family: monospace; font-size: 12px;
+  background: rgba(0,0,0,.06); padding: 4px 8px; border-radius: 4px;
+  color: var(--ink);
+}
+.tm-url-manual {
+  background: none; border: none; padding: 0;
+  color: var(--ink-2); font-size: 12px; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+  opacity: .65; align-self: flex-start;
+}
+.tm-url-manual:hover { opacity: 1; }
+.tm-url-back {
+  background: none; border: none; padding: 0 0 10px;
+  color: var(--ink-2); font-size: 12px; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+  opacity: .65; display: block;
+}
+.tm-url-back:hover { opacity: 1; }
