@@ -86,10 +86,10 @@ const TM_SERVER = "http://localhost:7654";
 function ProspectEditor({ initial, onSave, onCancel }) {
   const isEdit = !!initial;
 
-  const [step, setStep] = useStateP(isEdit ? "form" : "url");
   const [tmUrl, setTmUrl] = useStateP("");
   const [scraping, setScraping] = useStateP(false);
   const [scrapeError, setScrapeError] = useStateP("");
+  const [scraped, setScraped] = useStateP(false);
 
   const [form, setForm] = useStateP(() => ({
     category:    initial?.category    ?? "Punta centrale",
@@ -119,24 +119,23 @@ function ProspectEditor({ initial, onSave, onCancel }) {
         throw new Error(j.error || `HTTP ${res.status}`);
       }
       const data = await res.json();
-      setForm({
-        category:    data.category    || "Punta centrale",
-        name:        data.name        || "",
-        birthYear:   data.birthYear   || "",
-        nationality: data.nationality || "",
-        heightCm:    data.heightCm    || "",
-        foot:        data.foot        || "",
-        currentClub: data.currentClub || "",
-        agent:       data.agent       || "",
-        minutes:     data.minutes     || "",
+      setForm(f => ({
+        ...f,
+        category:    data.category    || f.category,
+        name:        data.name        || f.name,
+        birthYear:   data.birthYear   ?? f.birthYear,
+        nationality: data.nationality || f.nationality,
+        heightCm:    data.heightCm    ?? f.heightCm,
+        foot:        data.foot        || f.foot,
+        currentClub: data.currentClub || f.currentClub,
+        agent:       data.agent       || f.agent,
+        minutes:     data.minutes     ?? f.minutes,
         profileUrl:  data.profileUrl  || url,
-        status:      "monitoring",
-        scoutNotes:  "",
-      });
-      setStep("form");
+      }));
+      setScraped(true);
     } catch (err) {
       if (err.name === "TypeError") {
-        setScrapeError("Server non attivo. Avvia tm_server.py oppure inserisci manualmente.");
+        setScrapeError("Server non attivo — avvia tm_server.py per usare questa funzione.");
       } else {
         setScrapeError(err.message || "Errore durante lo scraping.");
       }
@@ -164,51 +163,31 @@ function ProspectEditor({ initial, onSave, onCancel }) {
     });
   };
 
-  // ── Step 1: URL ──────────────────────────────────────────────────────────
-  if (step === "url") {
-    return (
-      <div className="tm-url-step">
-        <p className="tm-url-hint">
-          Incolla il link Transfermarkt per compilare il profilo automaticamente.
-        </p>
-        <div className="tm-url-row">
-          <input
-            className="tm-url-input"
-            type="url"
-            autoFocus
-            placeholder="https://www.transfermarkt.it/nome/profil/spieler/123456"
-            value={tmUrl}
-            onChange={(e) => { setTmUrl(e.target.value); setScrapeError(""); }}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); fetchFromTM(); } }}
-          />
-          <button className="reset-btn editor-submit" type="button"
-                  disabled={!tmUrl.trim() || scraping} onClick={fetchFromTM}>
-            {scraping ? "Recupero…" : "Recupera ↗"}
-          </button>
-        </div>
-        {scrapeError && (
-          <div className="tm-url-error">
-            {scrapeError}
-            {scrapeError.includes("tm_server") && (
-              <code className="tm-url-cmd">python tm_server.py</code>
-            )}
-          </div>
-        )}
-        <button className="tm-url-manual" type="button" onClick={() => setStep("form")}>
-          Inserisci manualmente →
-        </button>
-      </div>
-    );
-  }
-
-  // ── Step 2: review / edit form ───────────────────────────────────────────
   return (
     <form className="editor-form editor-form-wide" onSubmit={submit}>
+
+      {/* ── Optional TM enrichment bar (new prospects only) ── */}
       {!isEdit && (
-        <button type="button" className="tm-url-back" onClick={() => setStep("url")}>
-          ← Torna al link TM
-        </button>
+        <div className="tm-enrich">
+          <div className="tm-enrich-row">
+            <span className="tm-enrich-label">TM</span>
+            <input
+              className="tm-enrich-input"
+              type="url"
+              placeholder="Incolla link Transfermarkt per compilare automaticamente…"
+              value={tmUrl}
+              onChange={(e) => { setTmUrl(e.target.value); setScrapeError(""); setScraped(false); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); fetchFromTM(); } }}
+            />
+            <button className="tm-enrich-btn" type="button"
+                    disabled={!tmUrl.trim() || scraping} onClick={fetchFromTM}>
+              {scraping ? "…" : scraped ? "✓" : "Recupera"}
+            </button>
+          </div>
+          {scrapeError && <div className="tm-enrich-error">{scrapeError}</div>}
+        </div>
       )}
+
       <div className="editor-row">
         <label>Categoria</label>
         <select value={form.category} onChange={set("category")}>
@@ -219,7 +198,7 @@ function ProspectEditor({ initial, onSave, onCancel }) {
       </div>
       <div className="editor-row">
         <label>Nome</label>
-        <input type="text" value={form.name} onChange={set("name")} required autoFocus={!isEdit} />
+        <input type="text" value={form.name} onChange={set("name")} required autoFocus />
       </div>
       <div className="editor-grid-2">
         <div className="editor-row">

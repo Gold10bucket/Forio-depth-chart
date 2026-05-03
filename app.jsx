@@ -582,6 +582,10 @@ function App() {
               + Aggiungi
             </button>
           )}
+          <button className="reset-btn reset-btn-prospect"
+                  onClick={() => setEditingProspect("new")}>
+            + Prospect
+          </button>
         </div>
       </div>
 

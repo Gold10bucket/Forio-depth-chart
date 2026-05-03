@@ -1193,3 +1193,69 @@ body{
   opacity: .65; display: block;
 }
 .tm-url-back:hover { opacity: 1; }
+
+/* ---- + Prospect button in strip ---- */
+.reset-btn-prospect {
+  background: rgba(200,48,42,.25);
+  border-color: rgba(200,48,42,.5);
+}
+.reset-btn-prospect:hover { background: rgba(200,48,42,.4); }
+
+/* ---- TM enrichment bar inside ProspectEditor ---- */
+.tm-enrich {
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  background: rgba(0,0,0,.04);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tm-enrich-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tm-enrich-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: var(--ink-2);
+  opacity: .55;
+  flex-shrink: 0;
+}
+.tm-enrich-input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 12px;
+  background: var(--cream);
+  color: var(--ink);
+}
+.tm-enrich-input:focus { outline: none; border-color: var(--accent); }
+.tm-enrich-btn {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-width: 60px;
+  text-align: center;
+}
+.tm-enrich-btn:disabled { opacity: .45; cursor: default; }
+.tm-enrich-btn:not(:disabled):hover { filter: brightness(1.1); }
+.tm-enrich-error {
+  font-size: 11px;
+  color: #c8302a;
+  line-height: 1.5;
+}
