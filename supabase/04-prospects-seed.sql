@@ -1,0 +1,75 @@
+-- Bulk import: 65 prospects from Transfermarkt shortlist (2026-05-02)
+-- Safe to re-run: clears the prospects table first.
+
+truncate table public.prospects;
+
+insert into public.prospects
+  (category, name, birth_date, birth_year, nationality, height_cm, foot, current_club, agent, minutes, profile_url)
+values
+('Terzino sinistro', 'Riccardo Geddo', '2006-10-31'::date, 2006, 'Italia', 175, 'sinistro', 'Casatese', 'Marco Montesarchio', 2914, 'https://www.transfermarkt.it/riccardo-geddo/profil/spieler/1312703'),
+('Terzino sinistro', 'Lorenzo Giorgi', '2006-03-18'::date, 2006, 'Italia', null, 'sinistro', 'Desenzano', null, 1016, 'https://www.transfermarkt.it/lorenzo-giorgi/profil/spieler/1056169'),
+('Terzino sinistro', 'Treasure Egharevba', '2008-06-23'::date, 2008, 'Italia', null, 'sinistro', 'Modena U19', null, 1791, 'https://www.transfermarkt.it/treasure-egharevba/profil/spieler/1300468'),
+('Terzino sinistro', 'Antonio Castaldo', '2006-02-14'::date, 2006, 'Italia', null, 'sinistro', 'Parma U20', null, 1057, 'https://www.transfermarkt.it/antonio-castaldo/profil/spieler/942805'),
+('Terzino sinistro', 'Gaetano Santarpia', '2006-12-21'::date, 2006, 'Italia', 183, 'sinistro', 'Caratese', 'Avv Claudio Parlato', 885, 'https://www.transfermarkt.it/gaetano-santarpia/profil/spieler/1191625'),
+('Terzino sinistro', 'Nicolò Ferretti', '2007-11-10'::date, 2007, 'Italia', null, 'sinistro', 'Reggiana U19', null, 1232, 'https://www.transfermarkt.it/nicolo-ferretti/profil/spieler/1186090'),
+('Terzino sinistro', 'Mattia Vergani', '2008-06-30'::date, 2008, 'Italia', null, 'destro', 'Cittadella U19', null, 1212, 'https://www.transfermarkt.it/mattia-vergani/profil/spieler/1246496'),
+('Terzino sinistro', 'Riccardo Maria Meleddu', '2007-04-18'::date, 2007, 'Italia', null, 'destro', 'Lecco U19', null, 2017, 'https://www.transfermarkt.it/riccardo-maria-meleddu/profil/spieler/1178311'),
+('Difensore centrale mancino', 'Andrea Conti', '2000-03-25'::date, 2000, 'Italia', 185, 'sinistro', 'Siena', 'Avvocato Andrea ...', 2966, 'https://www.transfermarkt.it/andrea-conti/profil/spieler/546848'),
+('Difensore centrale mancino', 'Michael Ntube', '2001-02-04'::date, 2001, 'Italia', 187, 'sinistro', 'Desenzano', 'Gea Management', 549, 'https://www.transfermarkt.it/michael-ntube/profil/spieler/421870'),
+('Difensore centrale mancino', 'Nicolò Bernini', '2005-10-28'::date, 2005, 'Italia', 187, 'sinistro', 'Oltrepò', 'Lorenzo Laverone', 2709, 'https://www.transfermarkt.it/nicolo-bernini/profil/spieler/1149414'),
+('Difensore centrale mancino', 'Sebastian Elefante', '2004-01-22'::date, 2004, 'Italia', 191, 'sinistro', 'Imolese', 'MP Football Scouting', 2398, 'https://www.transfermarkt.it/sebastian-elefante/profil/spieler/814477'),
+('Difensore centrale mancino', 'Mattia Mirri', '2007-10-22'::date, 2007, 'Italia', null, 'sinistro', 'Reggiana U19', 'FOOTBALL STARS ...', 1398, 'https://www.transfermarkt.it/mattia-mirri/profil/spieler/1192019'),
+('Difensore centrale destro', 'Mirko Rettore', '2004-01-20'::date, 2004, 'Italia', 189, 'destro', 'Oltrepò', 'Esse Sports', 2442, 'https://www.transfermarkt.it/mirko-rettore/profil/spieler/729293'),
+('Difensore centrale destro', 'Nicolò Milani', '2001-06-20'::date, 2001, 'Italia', 188, 'destro', 'Casatese', null, 2792, 'https://www.transfermarkt.it/nicolo-milani/profil/spieler/536811'),
+('Difensore centrale destro', 'Davide Redondi', '2003-05-02'::date, 2003, 'Italia', 187, 'destro', 'Sangiuliano', null, 2656, 'https://www.transfermarkt.it/davide-redondi/profil/spieler/704343'),
+('Difensore centrale destro', 'Mattia Nunzio Grassia', '2005-05-08'::date, 2005, 'Italia', 184, 'destro', 'Scanzorosciate', 'BE SPORT', 2293, 'https://www.transfermarkt.it/mattia-nunzio-grassia/profil/spieler/1051733'),
+('Difensore centrale destro', 'Giancarlo Aprile', '1999-03-30'::date, 1999, 'Italia', 186, 'destro', 'Caratese', 'MVSF agenzia', 1422, 'https://www.transfermarkt.it/giancarlo-aprile/profil/spieler/391050'),
+('Difensore centrale destro', 'Tommaso Rigo', '2005-08-03'::date, 2005, 'Italia', null, 'destro', 'Club Milano', 'MCI', 2445, 'https://www.transfermarkt.it/tommaso-rigo/profil/spieler/1175538'),
+('Difensore centrale destro', 'Marco Chiricallo', '2002-06-27'::date, 2002, 'Italia', null, 'destro', 'Pro Sesto', null, 637, 'https://www.transfermarkt.it/marco-chiricallo/profil/spieler/680192'),
+('Play', 'Federico Zazzi', '1997-06-09'::date, 1997, 'Italia', 180, 'destro', 'Caldiero', null, 2170, 'https://www.transfermarkt.it/federico-zazzi/profil/spieler/463455'),
+('Play', 'Isaia Lattarulo', '1998-01-08'::date, 1998, 'Italia', 180, 'sinistro', 'Prato', 'Amala srls', 2077, 'https://www.transfermarkt.it/isaia-lattarulo/profil/spieler/394777'),
+('Play', 'Pietro Itraloni', '2005-03-28'::date, 2005, 'Italia', 175, 'destro', 'Pavia', 'MVP Agency', 3226, 'https://www.transfermarkt.it/pietro-itraloni/profil/spieler/914508'),
+('Play', 'Alessio Raso', '2002-03-29'::date, 2002, 'Italia', 178, 'destro', 'Oltrepò', 'BE SPORT', 2664, 'https://www.transfermarkt.it/alessio-raso/profil/spieler/857455'),
+('Play', 'Antonio Palma', '1994-01-03'::date, 1994, 'Italia', 170, 'destro', 'AC Leon', null, 1993, 'https://www.transfermarkt.it/antonio-palma/profil/spieler/197482'),
+('Play', 'Leonel Belecco', '1997-09-11'::date, 1997, 'Argentina', null, 'sinistro', 'Sondrio', 'Marco Montesarchio', 1296, 'https://www.transfermarkt.it/leonel-belecco/profil/spieler/1289453'),
+('Play', 'Eros Castelletto', '1995-08-11'::date, 1995, 'Italia', 174, 'destro', 'Castellanzese', 'Senza procuratore', 2672, 'https://www.transfermarkt.it/eros-castelletto/profil/spieler/240658'),
+('Play', 'Lorenzo Costa', '2000-11-06'::date, 2000, 'Italia', null, 'destro', 'Virtus Bergamo', null, 2239, 'https://www.transfermarkt.it/lorenzo-costa/profil/spieler/1175542'),
+('Play', 'Nico Valisena', '2005-03-16'::date, 2005, 'Italia', null, 'destro', 'Varesina', null, 1085, 'https://www.transfermarkt.it/nico-valisena/profil/spieler/935141'),
+('Ala destra', 'Leonardo Taurino', '1995-07-25'::date, 1995, 'Italia', 168, 'destro', 'Fidelis Andria', null, 1134, 'https://www.transfermarkt.it/leonardo-taurino/profil/spieler/240582'),
+('Ala destra', 'Filippo Guerini', '2000-12-21'::date, 2000, 'Italia', null, 'sinistro', 'Varese', 'Wave Football', 2423, 'https://www.transfermarkt.it/filippo-guerini/profil/spieler/459620'),
+('Ala destra', 'Mohamed Ayman Sanat', '2002-05-28'::date, 2002, 'Italia', 175, 'sinistro', 'Campodarsego', null, 1420, 'https://www.transfermarkt.it/mohamed-ayman-sanat/profil/spieler/641204'),
+('Ala destra', 'Mathéssendé Baud Banaga', '2006-09-10'::date, 2006, 'Francia', 178, 'sinistro', 'Varesina', null, 1468, 'https://www.transfermarkt.it/mathessende-baud-banaga/profil/spieler/1160087'),
+('Ala destra', 'Mattia Lo Monaco', '2002-12-08'::date, 2002, 'Italia', 181, 'sinistro', 'Oltrepò', 'Alessandro RANIERI', 1965, 'https://www.transfermarkt.it/mattia-lo-monaco/profil/spieler/738074'),
+('Ala destra', 'Filippo Gerardini', '2000-09-11'::date, 2000, 'Italia', 170, 'sinistro', 'Grosseto', 'Piccioli&Lombardi', 1005, 'https://www.transfermarkt.it/filippo-gerardini/profil/spieler/525023'),
+('Ala destra', 'Osmane Camara', '2006-11-28'::date, 2006, 'Italia', 173, 'sinistro', 'Citt.Vis Modena', 'GLM', 1446, 'https://www.transfermarkt.it/osmane-camara/profil/spieler/1183832'),
+('Ala destra', 'Stefano Precupanu', '2008-12-20'::date, 2008, 'Romania', null, 'sinistro', 'FC Südtirol U19', null, 1632, 'https://www.transfermarkt.it/stefano-precupanu/profil/spieler/1120692'),
+('Ala destra', 'Christian Molara', '2006-10-07'::date, 2006, 'Italia', 180, 'sinistro', 'Modena U19', 'P&P Sport ...', 1631, 'https://www.transfermarkt.it/christian-molara/profil/spieler/1306954'),
+('Ala destra', 'Francesco Maiorano', '2008-05-31'::date, 2008, 'Italia', null, 'sinistro', 'Real Normanna', null, 804, 'https://www.transfermarkt.it/francesco-maiorano/profil/spieler/1301474'),
+('Ala destra', 'Christian Bianchetti', '2003-04-13'::date, 2003, 'Italia', null, 'sinistro', 'AC Leon', null, 687, 'https://www.transfermarkt.it/christian-bianchetti/profil/spieler/627829'),
+('Ala destra', 'Aldo Banse', '2002-12-04'::date, 2002, 'Italia', 178, 'sinistro', 'Pro Sesto', 'GA19Consulting', 1443, 'https://www.transfermarkt.it/aldo-banse/profil/spieler/604690'),
+('Ala destra', 'Francesco Morano', '2006-06-23'::date, 2006, 'Italia', null, 'sinistro', 'Trastevere', null, 1609, 'https://www.transfermarkt.it/francesco-morano/profil/spieler/1310347'),
+('Ala destra', 'Michele Scienza', '2006-03-13'::date, 2006, 'Italia', null, 'sinistro', 'Chisola', null, 1048, 'https://www.transfermarkt.it/michele-scienza/profil/spieler/1049599'),
+('Ala sinistra', 'Simone Alessandrini', '2000-06-25'::date, 2000, 'Italia', 178, 'destro', 'Lentigione', 'BE SPORT', 2326, 'https://www.transfermarkt.it/simone-alessandrini/profil/spieler/687404'),
+('Ala sinistra', 'Lorenzo Bellini', '1999-02-14'::date, 1999, 'Italia', 179, 'destro', 'Foll. Gavorrano', null, 2206, 'https://www.transfermarkt.it/lorenzo-bellini/profil/spieler/676276'),
+('Ala sinistra', 'Nicola Pinto', '2000-02-14'::date, 2000, 'Italia', null, 'destro', 'Fasano', 'GA19Consulting', 1471, 'https://www.transfermarkt.it/nicola-pinto/profil/spieler/1049873'),
+('Ala sinistra', 'Moussa Seck Ndoye', '2004-11-15'::date, 2004, 'Senegal', 187, 'destro', 'Albalonga', 'DQ Football ...', 1550, 'https://www.transfermarkt.it/moussa-seck-ndoye/profil/spieler/1105550'),
+('Ala sinistra', 'Ousmane Banse', '2007-09-03'::date, 2007, 'Burkina Faso', 185, 'destro', 'Reggiana U19', 'Vigo Global Sport ...', 1642, 'https://www.transfermarkt.it/ousmane-banse/profil/spieler/1296289'),
+('Ala sinistra', 'Lorenzo Sangiorgio', '2004-03-28'::date, 2004, 'Italia', null, 'destro', 'Gozzano', null, 1448, 'https://www.transfermarkt.it/lorenzo-sangiorgio/profil/spieler/884444'),
+('Ala sinistra', 'Michele Forchignone', '2003-01-03'::date, 2003, 'Italia', 175, 'destro', 'Caratese', 'FUTURA 2', 1612, 'https://www.transfermarkt.it/michele-forchignone/profil/spieler/666005'),
+('Ala sinistra', 'Yeiner Pupo Posada', '2003-08-18'::date, 2003, 'Colombia', null, 'destro', 'Foligno', 'Football & More', 1704, 'https://www.transfermarkt.it/yeiner-pupo-posada/profil/spieler/937763'),
+('Ala sinistra', 'Tommaso Spaviero', '1999-04-26'::date, 1999, 'Italia', null, 'destro', 'Nibbiano', null, 896, 'https://www.transfermarkt.it/tommaso-spaviero/profil/spieler/398742'),
+('Ala sinistra', 'Andrea Tremolada', '1999-05-27'::date, 1999, 'Italia', 181, 'destro', 'Sangiuliano', null, 2483, 'https://www.transfermarkt.it/andrea-tremolada/profil/spieler/496531'),
+('Ala sinistra', 'Carmelo Muzio', '2003-02-09'::date, 2003, 'Italia', 178, 'destro', 'Club Milano', 'BC Group', 1694, 'https://www.transfermarkt.it/carmelo-muzio/profil/spieler/952364'),
+('Ala sinistra', 'Mattia Tommaso Marchetti', '2006-02-21'::date, 2006, 'Italia', null, 'destro', 'Club Milano', null, 1386, 'https://www.transfermarkt.it/mattia-tommaso-marchetti/profil/spieler/1303757'),
+('Ala sinistra', 'Mattia Turella', '2007-08-22'::date, 2007, 'Italia', null, 'destro', 'Cittadella U19', 'G.E.V. ...', 2023, 'https://www.transfermarkt.it/mattia-turella/profil/spieler/1086458'),
+('Punta centrale', 'Darian Hrom', '2004-01-16'::date, 2004, 'Romania', 187, 'destro', 'Oltrepò', 'Start Group', 2380, 'https://www.transfermarkt.it/darian-hrom/profil/spieler/1182590'),
+('Punta centrale', 'Dennis Costantino', '2000-10-03'::date, 2000, 'Italia', 183, 'destro', 'Varesina', 'One Players'' Agent', 2568, 'https://www.transfermarkt.it/dennis-costantino/profil/spieler/1049778'),
+('Punta centrale', 'Mario Musy', '1999-06-24'::date, 1999, 'Spagna', 191, 'destro', 'Heraclea', 'PARRI GROUP', 2885, 'https://www.transfermarkt.it/mario-musy/profil/spieler/552322'),
+('Punta centrale', 'Ewan Urain', '2000-03-10'::date, 2000, 'Scozia', 193, 'destro', 'Manfredonia', 'IDUB GLOBAL', 2347, 'https://www.transfermarkt.it/ewan-urain/profil/spieler/626962'),
+('Punta centrale', 'Salah Aziz Binous', '2000-08-04'::date, 2000, 'Svizzera', 192, 'sinistro', 'Caratese', 'Senza procuratore', 1681, 'https://www.transfermarkt.it/salah-aziz-binous/profil/spieler/511143'),
+('Punta centrale', 'Francesco Verde', '1999-08-16'::date, 1999, 'Italia', 188, 'destro', 'Prato', 'Daniel Piconcelli', 1776, 'https://www.transfermarkt.it/francesco-verde/profil/spieler/395870'),
+('Punta centrale', 'Thomas Orfeini', '2004-07-15'::date, 2004, 'Italia', null, 'destro', 'Caldiero', 'PDP s.r.l.', 1446, 'https://www.transfermarkt.it/thomas-orfeini/profil/spieler/1037696'),
+('Punta centrale', 'Ismaila Badje', '2001-05-26'::date, 2001, 'Gambia', 186, 'destro', 'Ostiamare', null, 1885, 'https://www.transfermarkt.it/ismaila-badje/profil/spieler/819326'),
+('Punta centrale', 'Allan Khiari', '2002-06-28'::date, 2002, 'Algeria', 190, 'destro', 'svincolato', 'Senza procuratore', 989, 'https://www.transfermarkt.it/allan-khiari/profil/spieler/798157'),
+('Punta centrale', 'Vincenzo Calì', '1994-09-02'::date, 1994, 'Italia', 184, 'destro', 'Campodarsego', null, 1523, 'https://www.transfermarkt.it/vincenzo-cali/profil/spieler/214954'),
+('Punta centrale', 'Nicolò Gamba', '2007-11-05'::date, 2007, 'Italia', null, 'destro', 'AlbinoLeffe U19', null, 1523, 'https://www.transfermarkt.it/nicolo-gamba/profil/spieler/1167985');
