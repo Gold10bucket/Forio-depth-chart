@@ -1080,3 +1080,51 @@ body{
   opacity: .7;
 }
 .pcard-btn-move:hover { opacity: 1; }
+
+/* ---- prospect-fill token (empty slot with a prospect) ---- */
+.token.is-prospect-fill { cursor: pointer; }
+.token.is-prospect-fill .token-shirt {
+  background: linear-gradient(135deg, #c8302a 0%, #c8302a 50%, #f5ead6 50%, #f5ead6 100%);
+  border-color: rgba(255,255,255,.4);
+}
+.token.is-prospect-fill .token-stripes { display: none; }
+.token.is-prospect-fill .token-num { color: #f5ead6; mix-blend-mode: normal; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
+.tone-night .token.is-prospect-fill .token-num { color: #f5ead6; }
+
+/* ---- player status badge on pitch token ---- */
+.token-status-badge {
+  position: absolute;
+  top: -5px; right: -5px;
+  font-size: 7px; font-weight: 800;
+  font-family: "JetBrains Mono", monospace;
+  padding: 1px 3px;
+  border-radius: 3px;
+  line-height: 1.3;
+  pointer-events: none;
+  z-index: 3;
+}
+.token-status-inj { background: #c8302a; color: #fff; }
+.token-status-sus { background: #f4b400; color: #1a1a1a; }
+
+/* ---- player status button in depth list ---- */
+.player-status-btn {
+  font-size: 8.5px; font-weight: 800;
+  font-family: "JetBrains Mono", monospace;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid;
+  cursor: pointer;
+  line-height: 1.5;
+  transition: opacity .15s, background .15s;
+  background: transparent;
+  flex-shrink: 0;
+}
+.player-status-btn.status-ok  { color: rgba(255,255,255,.25); border-color: rgba(255,255,255,.12); }
+.player-status-btn.status-ok:hover { color: rgba(255,255,255,.55); border-color: rgba(255,255,255,.35); }
+.player-status-btn.status-inj { color: #ff7070; border-color: #c8302a; background: rgba(200,48,42,.18); }
+.player-status-btn.status-sus { color: #f4b400; border-color: #f4b400; background: rgba(244,180,0,.14); }
+
+/* ---- within-list drag-to-reorder ---- */
+.depth-row.is-drag-over { box-shadow: inset 0 2px 0 var(--accent, #f4b400); }
+.depth-row.has-status-injured  { border-left: 2px solid #c8302a; }
+.depth-row.has-status-suspended { border-left: 2px solid #f4b400; }

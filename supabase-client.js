@@ -104,6 +104,14 @@
     }
   }
 
+  // Reorder players within a position by setting depth_index to match the given ID array.
+  async function reorderPosition(position, playerIds) {
+    for (let i = 0; i < playerIds.length; i++) {
+      const { error } = await client.from("players").update({ depth_index: i }).eq("id", playerIds[i]);
+      if (error) throw error;
+    }
+  }
+
   // Move a player to a different position; lands at the bottom of the new list.
   async function movePlayer(playerId, newPosition) {
     const { data: existing } = await client
@@ -272,6 +280,7 @@
     updatePlayer,
     deletePlayer,
     setStarter,
+    reorderPosition,
     movePlayer,
     fetchProspects,
     addProspect,

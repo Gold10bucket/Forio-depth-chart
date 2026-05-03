@@ -1,7 +1,7 @@
 const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
 // ---------- visual primitives ----------
-function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer, onDropOnPos, dragActive }) {
+function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer, onDropOnPos, dragActive, playerStatuses }) {
   return (
     <div className="pitch-wrap">
       <svg className="pitch-svg" viewBox="0 0 100 140" preserveAspectRatio="none">
@@ -28,12 +28,14 @@ function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer,
         const isSwap = swap && swap.from === p.id;
         const empty = !player;
         const prospectCount = (prospectsByPos && prospectsByPos[p.id]?.length) || 0;
+        const topProspect = empty ? (prospectsByPos && prospectsByPos[p.id]?.[0]) : null;
         const isDragging = dragActive && dragActive.fromPos === p.id && dragActive.playerId === player?.id;
         const isDropTarget = dragActive && dragActive.fromPos !== p.id;
+        const pStatus = player && playerStatuses?.[player.id];
         return (
           <button
             key={p.id}
-            className={`token ${isSel ? "is-selected" : ""} ${isSwap ? "is-swap" : ""} ${empty ? "is-empty" : ""} ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""}`}
+            className={`token ${isSel ? "is-selected" : ""} ${isSwap ? "is-swap" : ""} ${empty && !topProspect ? "is-empty" : ""} ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""} ${topProspect ? "is-prospect-fill" : ""}`}
             style={{ left: `${p.x}%`, top: `${p.y}%` }}
             draggable={!empty}
             onDragStart={(e) => {
@@ -53,15 +55,19 @@ function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer,
           >
             <div className="token-shirt">
               <div className="token-stripes" />
-              <div className="token-num">{empty ? "—" : player.n}</div>
+              <div className="token-num">{topProspect ? "★" : (empty ? "—" : player.n)}</div>
             </div>
-            {prospectCount > 0 && (
+            {prospectCount > 0 && !topProspect && (
               <span className="token-prospect-badge" title={`${prospectCount} prospect`}>+{prospectCount}</span>
             )}
+            {pStatus === "injured"   && <span className="token-status-badge token-status-inj">INF</span>}
+            {pStatus === "suspended" && <span className="token-status-badge token-status-sus">SQU</span>}
             <div className="token-name">
               <span className="token-name-pos">{p.label}</span>
               <span className="token-name-text">
-                {empty ? "LIBERO" : player.name.split(" ").slice(-1)[0].toUpperCase()}
+                {topProspect
+                  ? topProspect.name.split(" ").slice(-1)[0].toUpperCase()
+                  : (empty ? "LIBERO" : player.name.split(" ").slice(-1)[0].toUpperCase())}
               </span>
             </div>
           </button>
@@ -71,16 +77,35 @@ function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer,
   );
 }
 
-function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode }) {
+function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode, playerStatuses, onStatusCycle, onReorderDepth }) {
   const players = roster[posId] || [];
   const prospects = prospectsForPos || [];
   const labels = ["1ª", "2ª", "3ª", "4ª"];
   const empty = players.length === 0 && prospects.length === 0;
   const isDropTarget = dragActive && dragActive.fromPos !== posId;
+  const [dragOverIdx, setDragOverIdx] = useState(null);
+
   const cardDragHandlers = {
-    onDragOver: (e) => { if (dragActive) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; } },
-    onDrop: (e) => { e.preventDefault(); if (dragActive) onDropOnPos && onDropOnPos(posId); },
+    onDragOver: (e) => { if (dragActive && dragActive.fromPos !== posId) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; } },
+    onDrop: (e) => { e.preventDefault(); if (dragActive && dragActive.fromPos !== posId) onDropOnPos && onDropOnPos(posId); },
   };
+
+  const handleRowDrop = (e, toIdx) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragActive || dragActive.fromPos !== posId) return;
+    const fromIdx = players.findIndex(pl => pl.id === dragActive.playerId);
+    if (fromIdx === -1 || fromIdx === toIdx) { setDragOverIdx(null); return; }
+    const reordered = [...players];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    setDragOverIdx(null);
+    onReorderDepth && onReorderDepth(posId, reordered.map(pl => pl.id));
+  };
+
+  const STATUS_CLS   = { injured: "status-inj", suspended: "status-sus" };
+  const STATUS_LABEL = { injured: "INF", suspended: "SQU" };
+
   if (empty) {
     return (
       <div className={`depth-card is-empty ${highlight ? "is-highlight" : ""} ${isDropTarget ? "is-drop-target" : ""}`} {...cardDragHandlers}>
@@ -109,10 +134,12 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
             const isStarter = i === 0;
             const isYouth = pl.birthYear >= 2006;
             const isDragging = dragActive && dragActive.playerId === pl.id;
+            const isDragOver = dragOverIdx === i && dragActive?.fromPos === posId && !isDragging;
+            const pStatus = playerStatuses?.[pl.id];
             return (
               <li
                 key={pl.id || pl.n}
-                className={`depth-row ${isStarter ? "is-starter" : ""} ${isYouth ? "is-youth" : ""} ${isDragging ? "is-dragging" : ""}`}
+                className={`depth-row ${isStarter ? "is-starter" : ""} ${isYouth ? "is-youth" : ""} ${isDragging ? "is-dragging" : ""} ${isDragOver ? "is-drag-over" : ""} ${pStatus ? `has-status-${pStatus}` : ""}`}
                 draggable
                 onDragStart={(e) => {
                   e.stopPropagation();
@@ -120,7 +147,11 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
                   e.dataTransfer.setData("text/plain", pl.id);
                   onDragPlayer && onDragPlayer({ playerId: pl.id, fromPos: posId });
                 }}
-                onDragEnd={() => onDragPlayer && onDragPlayer(null)}
+                onDragEnd={() => { setDragOverIdx(null); onDragPlayer && onDragPlayer(null); }}
+                onDragOver={(e) => {
+                  if (dragActive?.fromPos === posId) { e.preventDefault(); e.stopPropagation(); setDragOverIdx(i); }
+                }}
+                onDrop={(e) => handleRowDrop(e, i)}
                 onClick={() => !editMode && onSetStarter(posId, pl.id)}
               >
                 <span className="depth-rank">{isStarter ? "XI" : (labels[i] || `${i+1}ª`)}</span>
@@ -130,6 +161,11 @@ function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDel
                   <span className="depth-info">{pl.info}</span>
                 </div>
                 <div className="depth-stats">
+                  <button
+                    className={`player-status-btn ${pStatus ? STATUS_CLS[pStatus] : "status-ok"}`}
+                    title={pStatus === "injured" ? "Infortunato — clicca per cambiare" : pStatus === "suspended" ? "Squalificato — clicca per cambiare" : "Disponibile — clicca per cambiare"}
+                    onClick={(e) => { e.stopPropagation(); onStatusCycle && onStatusCycle(pl.id); }}
+                  >{pStatus ? STATUS_LABEL[pStatus] : "OK"}</button>
                   <span className="depth-byear">{pl.birthYear || "—"}</span>
                   {editMode && (
                     <span className="depth-row-actions">
@@ -245,13 +281,13 @@ function App() {
   const [editMode, setEditMode] = useState(false);
   const [editing, setEditing] = useState(null); // null | "new" | playerObject
   const [prospects, setProspects] = useState([]);
-  const [prospectOrder, setProspectOrder] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("prospectOrder") || "null"); }
-    catch { return null; }
+  const [editingProspect, setEditingProspect] = useState(null);
+  const [converting, setConverting] = useState(null);
+  const [dragInfo, setDragInfo] = useState(null);
+  const [playerStatuses, setPlayerStatuses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("playerStatuses") || "{}"); }
+    catch { return {}; }
   });
-  const [editingProspect, setEditingProspect] = useState(null); // null | "new" | prospectObj
-  const [converting, setConverting] = useState(null); // prospect being converted
-  const [dragInfo, setDragInfo] = useState(null); // {playerId, fromPos} | null
 
   // ---- initial load + realtime subscription ----
   const reload = useCallback(async (which) => {
@@ -361,9 +397,21 @@ function App() {
     catch (err) { console.error(err); showToast("Errore: " + err.message); }
   };
 
-  const handleProspectReorder = (orderedIds) => {
-    setProspectOrder(orderedIds);
-    localStorage.setItem("prospectOrder", JSON.stringify(orderedIds));
+  const handleStatusCycle = (playerId) => {
+    const CYCLE = { injured: "suspended", suspended: null };
+    setPlayerStatuses(prev => {
+      const next = CYCLE[prev[playerId]] ?? "injured";
+      const updated = { ...prev };
+      if (next === null) delete updated[playerId];
+      else updated[playerId] = next;
+      localStorage.setItem("playerStatuses", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleReorderDepth = async (posId, playerIds) => {
+    try { await SB.reorderPosition(posId, playerIds); }
+    catch (err) { console.error(err); showToast("Errore nel riordinamento"); }
   };
 
   const handleConvertConfirm = async ({ number, position }) => {
@@ -470,7 +518,8 @@ function App() {
                  prospectsByPos={prospectsByPos}
                  onDragPlayer={setDragInfo}
                  onDropOnPos={handleDropOnPos}
-                 dragActive={dragInfo} />
+                 dragActive={dragInfo}
+                 playerStatuses={playerStatuses} />
           <div className="pitch-legend">
             <span><i className="dot dot-starter" /> Formazione titolare</span>
             <span><i className="dot dot-bench" /> Clicca un ruolo per le gerarchie</span>
@@ -499,7 +548,10 @@ function App() {
                              onDropOnPos={handleDropOnPos}
                              dragActive={dragInfo}
                              highlight={selected === id}
-                             editMode={editMode} />
+                             editMode={editMode}
+                             playerStatuses={playerStatuses}
+                             onStatusCycle={handleStatusCycle}
+                             onReorderDepth={handleReorderDepth} />
                 ))}
               </div>
             </div>
@@ -507,23 +559,6 @@ function App() {
         </aside>
       </main>
 
-      <div className="prospects-section">
-        <div className="prospects-section-head no-print">
-          <span className="prospects-section-title">Shortlist · Prospect</span>
-          <span className="tab-badge">{prospects.length}</span>
-        </div>
-        <ProspectBoard
-          prospects={prospects}
-          roster={roster}
-          onAdd={() => setEditingProspect("new")}
-          onEdit={(p) => setEditingProspect(p)}
-          onDelete={handleProspectDelete}
-          onStatusChange={handleProspectStatus}
-          onConvert={(p) => setConverting(p)}
-          prospectOrder={prospectOrder}
-          onReorder={handleProspectReorder}
-        />
-      </div>
 
       {/* Prospect editor modal */}
       {editingProspect && (
