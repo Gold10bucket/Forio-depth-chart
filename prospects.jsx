@@ -23,7 +23,9 @@ const STATUS_META = {
 function ProspectCard({ p, onConvert, onEdit, onDelete, onStatusChange, onMoveUp, onMoveDown }) {
   const isYouth = p.birthYear >= 2006;
   const age = p.birthYear ? (2026 - p.birthYear) : null;
-  const short = SB.CATEGORY_SHORT[p.category] || p.category.slice(0,3).toUpperCase();
+  const short = SB.POSITION_KEYS.includes(p.category)
+    ? p.category
+    : (SB.CATEGORY_SHORT[p.category] || p.category.slice(0,3).toUpperCase());
   const stat = STATUS_META[p.status] || STATUS_META.monitoring;
 
   return (
@@ -92,7 +94,7 @@ function ProspectEditor({ initial, onSave, onCancel }) {
   const [scraped, setScraped] = useStateP(false);
 
   const [form, setForm] = useStateP(() => ({
-    category:    initial?.category    ?? "Punta centrale",
+    category:    initial?.category    ?? "ST",
     name:        initial?.name        ?? "",
     birthYear:   initial?.birthYear   ?? "",
     nationality: initial?.nationality ?? "",
@@ -191,8 +193,8 @@ function ProspectEditor({ initial, onSave, onCancel }) {
       <div className="editor-row">
         <label>Categoria</label>
         <select value={form.category} onChange={set("category")}>
-          {Object.keys(SB.CATEGORY_TO_POSITION).map(c =>
-            <option key={c} value={c}>{c}</option>
+          {SB.POSITION_KEYS.map(k =>
+            <option key={k} value={k}>{k}</option>
           )}
         </select>
       </div>
@@ -265,7 +267,9 @@ function ProspectEditor({ initial, onSave, onCancel }) {
 
 // ---------- convert modal ----------
 function ConvertProspectDialog({ prospect, roster, onConfirm, onCancel }) {
-  const suggested = SB.CATEGORY_TO_POSITION[prospect.category] || "ST";
+  const suggested = SB.POSITION_KEYS.includes(prospect.category)
+    ? prospect.category
+    : (SB.CATEGORY_TO_POSITION[prospect.category] || "ST");
   const [position, setPosition] = useStateP(suggested);
   const usedNumbers = useMemoP(() => {
     const all = [];
@@ -374,7 +378,7 @@ function ProspectBoard({ prospects, roster, onConvert, onEdit, onDelete, onStatu
     return g;
   }, [sorted, sortBy]);
 
-  const categories = Object.keys(SB.CATEGORY_TO_POSITION || {});
+  const categories = SB.POSITION_KEYS;
   const isManual = sortBy === "manual";
 
   return (

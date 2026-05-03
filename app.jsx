@@ -501,11 +501,11 @@ function App() {
     } catch (err) { console.error(err); showToast("Errore spostamento"); }
   };
 
-  // Map prospects to pitch positions via category. Many CSV categories don't have
-  // a 1:1 with the 11-position grid (e.g. "Mezzala" → could be RCM/LCM), so we
-  // fan out one-to-many where needed.
+  // Map prospects to pitch positions.
+  // New prospects use position keys directly (GK, ST, …).
+  // Legacy prospects used Italian category names — kept for backwards compat.
   const prospectsByPos = useMemo(() => {
-    const FANOUT = {
+    const LEGACY_FANOUT = {
       "Difensore centrale mancino": ["LCB"],
       "Difensore centrale destro":  ["RCB"],
       "Terzino sinistro":           ["LB"],
@@ -520,8 +520,14 @@ function App() {
     };
     const out = {};
     for (const pr of prospects) {
-      const targets = FANOUT[pr.category] || [];
-      for (const k of targets) (out[k] = out[k] || []).push(pr);
+      if (SB.POSITION_KEYS.includes(pr.category)) {
+        // New format: category IS the position key
+        (out[pr.category] = out[pr.category] || []).push(pr);
+      } else {
+        // Legacy format: Italian category name → fan out to position keys
+        const targets = LEGACY_FANOUT[pr.category] || [];
+        for (const k of targets) (out[k] = out[k] || []).push(pr);
+      }
     }
     // Apply custom ordering per position so pitch shows the correct #1 prospect
     for (const k of Object.keys(out)) {
