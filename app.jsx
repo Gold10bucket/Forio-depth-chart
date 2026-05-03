@@ -332,17 +332,7 @@ function App() {
   const [editingProspect, setEditingProspect] = useState(null);
   const [converting, setConverting] = useState(null);
   const [dragInfo, setDragInfo] = useState(null);
-  const [prospectOrders, setProspectOrders] = useState(() => {
-    const out = {};
-    const keys = SB.POSITION_KEYS;
-    for (const k of keys) {
-      try {
-        const v = localStorage.getItem(`pord_${k}`);
-        if (v) out[k] = JSON.parse(v);
-      } catch (_) {}
-    }
-    return out;
-  });
+  const [prospectOrders, setProspectOrders] = useState({});
   const reorderingRef = useRef(false);
 
   // ---- initial load + realtime subscription ----
@@ -358,6 +348,10 @@ function App() {
       if (!which || which === "prospects") {
         const list = await SB.fetchProspects();
         setProspects(list);
+      }
+      if (!which || which === "prospect_orders") {
+        const orders = await SB.fetchProspectOrders();
+        setProspectOrders(orders);
       }
     } catch (err) {
       console.error("[depth] fetch failed", err);
@@ -464,9 +458,10 @@ function App() {
     catch (err) { console.error(err); showToast("Errore: " + err.message); }
   };
 
-  const handleProspectOrderChange = (posId, ids) => {
-    localStorage.setItem(`pord_${posId}`, JSON.stringify(ids));
+  const handleProspectOrderChange = async (posId, ids) => {
     setProspectOrders(prev => ({ ...prev, [posId]: ids }));
+    try { await SB.saveProspectOrder(posId, ids); }
+    catch (err) { console.error(err); showToast("Errore nel riordinamento"); }
   };
 
   const handleReorderDepth = async (posId, playerIds) => {

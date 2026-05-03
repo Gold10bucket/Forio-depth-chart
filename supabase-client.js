@@ -253,6 +253,24 @@
     }
   }
 
+  // ---- prospect orders -------------------------------------------------
+  async function fetchProspectOrders() {
+    const { data, error } = await client
+      .from("prospect_orders")
+      .select("pos_id, ordered_ids");
+    if (error) throw error;
+    const out = {};
+    for (const r of (data || [])) out[r.pos_id] = r.ordered_ids;
+    return out;
+  }
+
+  async function saveProspectOrder(posId, ids) {
+    const { error } = await client
+      .from("prospect_orders")
+      .upsert({ pos_id: posId, ordered_ids: ids });
+    if (error) throw error;
+  }
+
   // ---- realtime --------------------------------------------------------
   // Subscribe and receive a callback whenever any row changes.
   // Returns an `unsubscribe` function.
@@ -265,6 +283,9 @@
       .on("postgres_changes",
           { event: "*", schema: "public", table: "prospects" },
           () => onChange && onChange("prospects"))
+      .on("postgres_changes",
+          { event: "*", schema: "public", table: "prospect_orders" },
+          () => onChange && onChange("prospect_orders"))
       .subscribe(status => onStatus && onStatus(status));
     return () => client.removeChannel(channel);
   }
@@ -287,6 +308,8 @@
     updateProspect,
     deleteProspect,
     convertProspectToPlayer,
+    fetchProspectOrders,
+    saveProspectOrder,
     subscribe,
   };
 })();
