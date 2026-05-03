@@ -378,19 +378,29 @@ function App() {
     setTimeout(() => setToast(null), ms);
   };
 
-  // ---- mutations (optimistic UI not strictly needed — realtime is fast) ----
+  // ---- mutations ----
   const setStarter = async (posId, playerId) => {
     const slot = roster[posId] || [];
     const idx = slot.findIndex(p => p.id === playerId);
     if (idx <= 0) return;
+    // Optimistic: move to front immediately so pitch updates without waiting for DB
+    setRoster(prev => {
+      const s = [...(prev[posId] || [])];
+      const [promoted] = s.splice(idx, 1);
+      s.unshift(promoted);
+      return { ...prev, [posId]: s };
+    });
     setSwap({ from: posId });
     setTimeout(() => setSwap(null), 700);
+    reorderingRef.current = true;
     try {
       await SB.setStarter(posId, playerId);
-      const pl = slot[idx];
-      showToast(`${pl.name} promosso titolare · ${posId}`);
+      showToast(`${slot[idx].name} promosso titolare · ${posId}`);
     } catch (err) {
       console.error(err); showToast("Errore salvataggio");
+    } finally {
+      reorderingRef.current = false;
+      reload("players");
     }
   };
 
