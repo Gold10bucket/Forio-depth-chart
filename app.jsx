@@ -244,8 +244,11 @@ function App() {
   const [status, setStatus] = useState("connecting"); // connecting | live | offline | error
   const [editMode, setEditMode] = useState(false);
   const [editing, setEditing] = useState(null); // null | "new" | playerObject
-  const [tab, setTab] = useState("depth"); // "depth" | "prospects"
   const [prospects, setProspects] = useState([]);
+  const [prospectOrder, setProspectOrder] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("prospectOrder") || "null"); }
+    catch { return null; }
+  });
   const [editingProspect, setEditingProspect] = useState(null); // null | "new" | prospectObj
   const [converting, setConverting] = useState(null); // prospect being converted
   const [dragInfo, setDragInfo] = useState(null); // {playerId, fromPos} | null
@@ -358,13 +361,17 @@ function App() {
     catch (err) { console.error(err); showToast("Errore: " + err.message); }
   };
 
+  const handleProspectReorder = (orderedIds) => {
+    setProspectOrder(orderedIds);
+    localStorage.setItem("prospectOrder", JSON.stringify(orderedIds));
+  };
+
   const handleConvertConfirm = async ({ number, position }) => {
     if (!converting) return;
     try {
       await SB.convertProspectToPlayer(converting, { number, position });
       const name = converting.name;
       setConverting(null);
-      setTab("depth");
       showToast(`${name} aggiunto alla rosa · ${position}`);
     } catch (err) { console.error(err); showToast(err.message || "Errore conversione"); }
   };
@@ -437,19 +444,6 @@ function App() {
         </div>
       </header>
 
-      <div className="tab-bar no-print">
-        <button className={`tab-btn ${tab === "depth" ? "is-active" : ""}`}
-                onClick={() => setTab("depth")}>
-          Gerarchie · Rosa
-        </button>
-        <button className={`tab-btn ${tab === "prospects" ? "is-active" : ""}`}
-                onClick={() => setTab("prospects")}>
-          Shortlist · Prospect
-          <span className="tab-badge">{prospects.length}</span>
-        </button>
-      </div>
-
-      {tab === "depth" && (
       <div className="formation-strip">
         <span className="form-num">4</span>
         <span className="form-dot" />
@@ -469,21 +463,7 @@ function App() {
           )}
         </div>
       </div>
-      )}
 
-      {tab === "prospects" && (
-        <ProspectBoard
-          prospects={prospects}
-          roster={roster}
-          onAdd={() => setEditingProspect("new")}
-          onEdit={(p) => setEditingProspect(p)}
-          onDelete={handleProspectDelete}
-          onStatusChange={handleProspectStatus}
-          onConvert={(p) => setConverting(p)}
-        />
-      )}
-
-      {tab === "depth" && (
       <main className="board">
         <section className="pitch-col">
           <Pitch roster={roster} selected={selected} onSelect={setSelected} swap={swap}
@@ -526,7 +506,24 @@ function App() {
           ))}
         </aside>
       </main>
-      )}
+
+      <div className="prospects-section">
+        <div className="prospects-section-head no-print">
+          <span className="prospects-section-title">Shortlist · Prospect</span>
+          <span className="tab-badge">{prospects.length}</span>
+        </div>
+        <ProspectBoard
+          prospects={prospects}
+          roster={roster}
+          onAdd={() => setEditingProspect("new")}
+          onEdit={(p) => setEditingProspect(p)}
+          onDelete={handleProspectDelete}
+          onStatusChange={handleProspectStatus}
+          onConvert={(p) => setConverting(p)}
+          prospectOrder={prospectOrder}
+          onReorder={handleProspectReorder}
+        />
+      </div>
 
       {/* Prospect editor modal */}
       {editingProspect && (

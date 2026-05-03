@@ -20,7 +20,7 @@ const STATUS_META = {
 };
 
 // ---------- single card ----------
-function ProspectCard({ p, onConvert, onEdit, onDelete, onStatusChange }) {
+function ProspectCard({ p, onConvert, onEdit, onDelete, onStatusChange, onMoveUp, onMoveDown }) {
   const isYouth = p.birthYear >= 2006;
   const age = p.birthYear ? (2026 - p.birthYear) : null;
   const short = SB.CATEGORY_SHORT[p.category] || p.category.slice(0,3).toUpperCase();
@@ -64,6 +64,8 @@ function ProspectCard({ p, onConvert, onEdit, onDelete, onStatusChange }) {
         {p.scoutNotes && <div className="pcard-notes">"{p.scoutNotes}"</div>}
 
         <div className="pcard-actions">
+          {onMoveUp   && <button className="pcard-btn pcard-btn-move" onClick={onMoveUp}   title="Sposta su">↑</button>}
+          {onMoveDown && <button className="pcard-btn pcard-btn-move" onClick={onMoveDown} title="Sposta giù">↓</button>}
           {p.profileUrl && (
             <a className="pcard-btn pcard-btn-view" href={p.profileUrl}
                target="_blank" rel="noopener noreferrer">Visualizza ↗</a>
@@ -252,7 +254,7 @@ function ConvertProspectDialog({ prospect, roster, onConfirm, onCancel }) {
 }
 
 // ---------- main board ----------
-function ProspectBoard({ prospects, roster, onConvert, onEdit, onDelete, onStatusChange, onAdd }) {
+function ProspectBoard({ prospects, roster, onConvert, onEdit, onDelete, onStatusChange, onAdd, prospectOrder, onReorder }) {
   const [search, setSearch] = useStateP("");
   const [filterCat, setFilterCat] = useStateP("all");
   const [filterStatus, setFilterStatus] = useStateP("all");
@@ -275,12 +277,27 @@ function ProspectBoard({ prospects, roster, onConvert, onEdit, onDelete, onStatu
 
   const sorted = useMemoP(() => {
     const arr = [...filtered];
-    if (sortBy === "name")        arr.sort((a,b) => a.name.localeCompare(b.name));
-    else if (sortBy === "year")   arr.sort((a,b) => (b.birthYear||0) - (a.birthYear||0));
-    else if (sortBy === "minutes")arr.sort((a,b) => (b.minutes||0) - (a.minutes||0));
-    else                          arr.sort((a,b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+    if (sortBy === "name")         arr.sort((a,b) => a.name.localeCompare(b.name));
+    else if (sortBy === "year")    arr.sort((a,b) => (b.birthYear||0) - (a.birthYear||0));
+    else if (sortBy === "minutes") arr.sort((a,b) => (b.minutes||0) - (a.minutes||0));
+    else if (sortBy === "manual") {
+      if (prospectOrder && prospectOrder.length) {
+        const idx = new Map(prospectOrder.map((id, i) => [id, i]));
+        arr.sort((a, b) => (idx.has(a.id) ? idx.get(a.id) : 9999) - (idx.has(b.id) ? idx.get(b.id) : 9999));
+      }
+    } else {
+      arr.sort((a,b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+    }
     return arr;
-  }, [filtered, sortBy]);
+  }, [filtered, sortBy, prospectOrder]);
+
+  const moveInOrder = (id, dir) => {
+    const ids = sorted.map(p => p.id);
+    const i = ids.indexOf(id);
+    if (dir === "up"   && i > 0)              { [ids[i-1], ids[i]] = [ids[i], ids[i-1]]; }
+    if (dir === "down" && i < ids.length - 1) { [ids[i], ids[i+1]] = [ids[i+1], ids[i]]; }
+    onReorder && onReorder(ids);
+  };
 
   const grouped = useMemoP(() => {
     if (sortBy !== "category") return null;
@@ -290,6 +307,7 @@ function ProspectBoard({ prospects, roster, onConvert, onEdit, onDelete, onStatu
   }, [sorted, sortBy]);
 
   const categories = Object.keys(SB.CATEGORY_TO_POSITION || {});
+  const isManual = sortBy === "manual";
 
   return (
     <div className="prospect-board">
@@ -313,6 +331,7 @@ function ProspectBoard({ prospects, roster, onConvert, onEdit, onDelete, onStatu
           <option value="year">Ordina: Anno (giovani)</option>
           <option value="minutes">Ordina: Minuti giocati</option>
           <option value="name">Ordina: Nome</option>
+          <option value="manual">Ordina: Personalizzato ↕</option>
         </select>
         <span className="prospect-count">{sorted.length} di {prospects.length}</span>
         <button className="reset-btn editor-submit prospect-add" onClick={onAdd}>+ Prospect</button>
@@ -343,10 +362,13 @@ function ProspectBoard({ prospects, roster, onConvert, onEdit, onDelete, onStatu
         </div>
       ) : (
         <div className="prospect-grid">
-          {sorted.map(p => (
+          {sorted.map((p, i) => (
             <ProspectCard key={p.id} p={p}
               onConvert={onConvert} onEdit={onEdit} onDelete={onDelete}
-              onStatusChange={onStatusChange} />
+              onStatusChange={onStatusChange}
+              onMoveUp={isManual && i > 0                  ? () => moveInOrder(p.id, "up")   : null}
+              onMoveDown={isManual && i < sorted.length - 1 ? () => moveInOrder(p.id, "down") : null}
+            />
           ))}
         </div>
       )}

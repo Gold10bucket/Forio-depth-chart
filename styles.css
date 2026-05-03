@@ -1047,3 +1047,36 @@ body{
   box-shadow: inset 3px 0 0 #f4b400;
 }
 .token, .depth-row{ -webkit-user-drag: element; }
+
+/* prospects section (merged into main view) */
+.prospects-section {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+.prospects-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0 4px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  margin-top: 8px;
+}
+.prospects-section-title {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--cream);
+  opacity: .55;
+}
+
+/* reorder buttons on prospect cards */
+.pcard-btn-move {
+  min-width: 26px;
+  padding: 0 5px;
+  font-size: 13px;
+  opacity: .7;
+}
+.pcard-btn-move:hover { opacity: 1; }
