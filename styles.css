@@ -915,3 +915,135 @@ body{
   .tab-bar, .prospect-toolbar, .pcard-actions{ display:none !important; }
   .pcard{ break-inside:avoid; }
 }
+
+
+/* ============== PROSPECTS INSIDE DEPTH CARD ============== */
+.depth-prospect-divider{
+  display:flex; align-items:center; gap:8px;
+  margin: 8px 14px 4px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(180,28,36,.85);
+}
+.depth-prospect-rule{
+  flex:1; height:1px;
+  background: repeating-linear-gradient(
+    90deg, rgba(180,28,36,.4) 0 4px, transparent 4px 8px
+  );
+}
+
+.depth-list-prospect{
+  background: linear-gradient(
+    180deg,
+    rgba(254,243,214,.55) 0%,
+    rgba(254,243,214,.35) 100%
+  );
+  border-top: 1px dashed rgba(180,28,36,.25);
+}
+
+.depth-row-prospect{
+  position:relative;
+  cursor: default !important;
+  padding-left: 16px !important;
+  border-bottom: 1px solid rgba(180,28,36,.08) !important;
+  background: transparent !important;
+}
+.depth-row-prospect::before{
+  content:"";
+  position:absolute;
+  left:6px; top:8px; bottom:8px;
+  width:3px;
+  background:#b41c24;
+  border-radius:2px;
+}
+.depth-row-prospect.is-youth::before{
+  background:repeating-linear-gradient(180deg, #0a5d3a 0 4px, #f4f1e8 4px 6px);
+}
+.depth-row-prospect:hover{
+  background: rgba(180,28,36,.04) !important;
+}
+.depth-row-prospect .depth-name{
+  font-style: italic;
+  color: rgba(16,21,18,.78);
+}
+.depth-row-prospect .depth-info{
+  color: rgba(180,28,36,.7);
+  font-size: 10.5px;
+}
+.depth-row-prospect .depth-byear{
+  color: rgba(16,21,18,.55);
+}
+
+.depth-rank-prospect{
+  background:#b41c24 !important;
+  color:#fff !important;
+  font-size: 8.5px !important;
+  letter-spacing: .15em !important;
+}
+.depth-num-prospect{
+  background: transparent !important;
+  color: #b41c24 !important;
+  font-weight: 700;
+  font-size: 14px !important;
+}
+
+.depth-row-prospect .row-act{
+  color: rgba(180,28,36,.7);
+  text-decoration: none;
+}
+.depth-row-prospect .row-act:hover{
+  color: #b41c24;
+  background: rgba(180,28,36,.10);
+}
+.row-act-promote{
+  background: var(--accent, #0a5d3a) !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+.row-act-promote:hover{
+  filter: brightness(1.1);
+}
+
+/* ============== PITCH PROSPECT BADGE ============== */
+.token-prospect-badge{
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #b41c24;
+  color: #fff;
+  border: 1.5px solid #fffaf2;
+  border-radius: 9px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  letter-spacing: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  z-index: 2;
+}
+
+/* drag-and-drop visual cues */
+.token.is-dragging{ opacity: .35; cursor: grabbing; }
+.token.is-drop-target .token-shirt{
+  box-shadow:
+    0 0 0 3px var(--cream),
+    0 0 0 6px #f4b400,
+    0 8px 18px -6px rgba(0,0,0,.55);
+  animation: pulseRing .9s ease-in-out infinite;
+}
+@keyframes pulseRing{
+  0%, 100%{ filter: brightness(1); }
+  50%     { filter: brightness(1.18); }
+}
+.depth-row.is-dragging{ opacity: .35; }
+.depth-row.is-drop-target{
+  background: rgba(244,180,0,.18) !important;
+  box-shadow: inset 3px 0 0 #f4b400;
+}
+.token, .depth-row{ -webkit-user-drag: element; }

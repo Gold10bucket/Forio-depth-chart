@@ -1,7 +1,7 @@
 const { useState, useMemo, useEffect, useRef, useCallback } = React;
 
 // ---------- visual primitives ----------
-function Pitch({ roster, selected, onSelect, swap }) {
+function Pitch({ roster, selected, onSelect, swap, prospectsByPos, onDragPlayer, onDropOnPos, dragActive }) {
   return (
     <div className="pitch-wrap">
       <svg className="pitch-svg" viewBox="0 0 100 140" preserveAspectRatio="none">
@@ -27,17 +27,37 @@ function Pitch({ roster, selected, onSelect, swap }) {
         const isSel = selected === p.id;
         const isSwap = swap && swap.from === p.id;
         const empty = !player;
+        const prospectCount = (prospectsByPos && prospectsByPos[p.id]?.length) || 0;
+        const isDragging = dragActive && dragActive.fromPos === p.id && dragActive.playerId === player?.id;
+        const isDropTarget = dragActive && dragActive.fromPos !== p.id;
         return (
           <button
             key={p.id}
-            className={`token ${isSel ? "is-selected" : ""} ${isSwap ? "is-swap" : ""} ${empty ? "is-empty" : ""}`}
+            className={`token ${isSel ? "is-selected" : ""} ${isSwap ? "is-swap" : ""} ${empty ? "is-empty" : ""} ${isDragging ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""}`}
             style={{ left: `${p.x}%`, top: `${p.y}%` }}
+            draggable={!empty}
+            onDragStart={(e) => {
+              if (empty) { e.preventDefault(); return; }
+              e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setData("text/plain", player.id);
+              onDragPlayer && onDragPlayer({ playerId: player.id, fromPos: p.id });
+            }}
+            onDragEnd={() => onDragPlayer && onDragPlayer(null)}
+            onDragOver={(e) => { if (dragActive) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; } }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (!dragActive) return;
+              onDropOnPos && onDropOnPos(p.id);
+            }}
             onClick={() => onSelect(p.id)}
           >
             <div className="token-shirt">
               <div className="token-stripes" />
               <div className="token-num">{empty ? "—" : player.n}</div>
             </div>
+            {prospectCount > 0 && (
+              <span className="token-prospect-badge" title={`${prospectCount} prospect`}>+{prospectCount}</span>
+            )}
             <div className="token-name">
               <span className="token-name-pos">{p.label}</span>
               <span className="token-name-text">
@@ -51,12 +71,19 @@ function Pitch({ roster, selected, onSelect, swap }) {
   );
 }
 
-function DepthList({ posId, roster, onSetStarter, onEdit, onDelete, highlight, editMode }) {
+function DepthList({ posId, roster, prospectsForPos, onSetStarter, onEdit, onDelete, onConvertProspect, onDragPlayer, onDropOnPos, dragActive, highlight, editMode }) {
   const players = roster[posId] || [];
+  const prospects = prospectsForPos || [];
   const labels = ["1ª", "2ª", "3ª", "4ª"];
-  if (players.length === 0) {
+  const empty = players.length === 0 && prospects.length === 0;
+  const isDropTarget = dragActive && dragActive.fromPos !== posId;
+  const cardDragHandlers = {
+    onDragOver: (e) => { if (dragActive) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; } },
+    onDrop: (e) => { e.preventDefault(); if (dragActive) onDropOnPos && onDropOnPos(posId); },
+  };
+  if (empty) {
     return (
-      <div className={`depth-card is-empty ${highlight ? "is-highlight" : ""}`}>
+      <div className={`depth-card is-empty ${highlight ? "is-highlight" : ""} ${isDropTarget ? "is-drop-target" : ""}`} {...cardDragHandlers}>
         <div className="depth-card-head">
           <span className="depth-card-pos">{posId}</span>
           <span className="depth-card-count">libero</span>
@@ -69,40 +96,89 @@ function DepthList({ posId, roster, onSetStarter, onEdit, onDelete, highlight, e
     );
   }
   return (
-    <div className={`depth-card ${highlight ? "is-highlight" : ""}`}>
+    <div className={`depth-card ${highlight ? "is-highlight" : ""} ${isDropTarget ? "is-drop-target" : ""}`} {...cardDragHandlers}>
       <div className="depth-card-head">
         <span className="depth-card-pos">{posId}</span>
-        <span className="depth-card-count">{players.length} in rosa</span>
+        <span className="depth-card-count">
+          {players.length} in rosa{prospects.length > 0 && ` · ${prospects.length} prospect`}
+        </span>
       </div>
-      <ol className="depth-list">
-        {players.map((pl, i) => {
-          const isStarter = i === 0;
-          const isYouth = pl.birthYear >= 2006;
-          return (
-            <li
-              key={pl.id || pl.n}
-              className={`depth-row ${isStarter ? "is-starter" : ""} ${isYouth ? "is-youth" : ""}`}
-              onClick={() => !editMode && onSetStarter(posId, pl.id)}
-            >
-              <span className="depth-rank">{isStarter ? "XI" : (labels[i] || `${i+1}ª`)}</span>
-              <span className="depth-num">{String(pl.n).padStart(2, "0")}</span>
-              <div className="depth-meta">
-                <span className="depth-name">{pl.name}</span>
-                <span className="depth-info">{pl.info}</span>
-              </div>
-              <div className="depth-stats">
-                <span className="depth-byear">{pl.birthYear || "—"}</span>
-                {editMode && (
-                  <span className="depth-row-actions">
-                    <button className="row-act" title="Modifica" onClick={(e)=>{e.stopPropagation();onEdit(pl);}}>✎</button>
-                    <button className="row-act row-act-del" title="Rimuovi" onClick={(e)=>{e.stopPropagation();if(confirm(`Rimuovere ${pl.name}?`))onDelete(pl.id);}}>×</button>
-                  </span>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+      {players.length > 0 && (
+        <ol className="depth-list">
+          {players.map((pl, i) => {
+            const isStarter = i === 0;
+            const isYouth = pl.birthYear >= 2006;
+            const isDragging = dragActive && dragActive.playerId === pl.id;
+            return (
+              <li
+                key={pl.id || pl.n}
+                className={`depth-row ${isStarter ? "is-starter" : ""} ${isYouth ? "is-youth" : ""} ${isDragging ? "is-dragging" : ""}`}
+                draggable
+                onDragStart={(e) => {
+                  e.stopPropagation();
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", pl.id);
+                  onDragPlayer && onDragPlayer({ playerId: pl.id, fromPos: posId });
+                }}
+                onDragEnd={() => onDragPlayer && onDragPlayer(null)}
+                onClick={() => !editMode && onSetStarter(posId, pl.id)}
+              >
+                <span className="depth-rank">{isStarter ? "XI" : (labels[i] || `${i+1}ª`)}</span>
+                <span className="depth-num">{String(pl.n).padStart(2, "0")}</span>
+                <div className="depth-meta">
+                  <span className="depth-name">{pl.name}</span>
+                  <span className="depth-info">{pl.info}</span>
+                </div>
+                <div className="depth-stats">
+                  <span className="depth-byear">{pl.birthYear || "—"}</span>
+                  {editMode && (
+                    <span className="depth-row-actions">
+                      <button className="row-act" title="Modifica" onClick={(e)=>{e.stopPropagation();onEdit(pl);}}>✎</button>
+                      <button className="row-act row-act-del" title="Rimuovi" onClick={(e)=>{e.stopPropagation();if(confirm(`Rimuovere ${pl.name}?`))onDelete(pl.id);}}>×</button>
+                    </span>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+      {prospects.length > 0 && (
+        <>
+          <div className="depth-prospect-divider">
+            <span>Prospect osservati</span>
+            <span className="depth-prospect-rule" />
+          </div>
+          <ol className="depth-list depth-list-prospect">
+            {prospects.map((pr) => {
+              const isYouth = pr.birthYear >= 2006;
+              return (
+                <li key={pr.id}
+                    className={`depth-row depth-row-prospect ${isYouth ? "is-youth" : ""}`}
+                    title={`${pr.category}${pr.currentClub ? " · " + pr.currentClub : ""}`}>
+                  <span className="depth-rank depth-rank-prospect">OSS</span>
+                  <span className="depth-num depth-num-prospect">★</span>
+                  <div className="depth-meta">
+                    <span className="depth-name">{pr.name}</span>
+                    <span className="depth-info">{pr.currentClub || pr.category}</span>
+                  </div>
+                  <div className="depth-stats">
+                    <span className="depth-byear">{pr.birthYear || "—"}</span>
+                    <span className="depth-row-actions">
+                      {pr.profileUrl && (
+                        <a className="row-act" href={pr.profileUrl} target="_blank" rel="noopener noreferrer"
+                           title="Visualizza profilo" onClick={(e)=>e.stopPropagation()}>↗</a>
+                      )}
+                      <button className="row-act row-act-promote" title="Aggiungi alla rosa"
+                              onClick={(e)=>{e.stopPropagation();onConvertProspect(pr);}}>→</button>
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      )}
     </div>
   );
 }
@@ -172,6 +248,7 @@ function App() {
   const [prospects, setProspects] = useState([]);
   const [editingProspect, setEditingProspect] = useState(null); // null | "new" | prospectObj
   const [converting, setConverting] = useState(null); // prospect being converted
+  const [dragInfo, setDragInfo] = useState(null); // {playerId, fromPos} | null
 
   // ---- initial load + realtime subscription ----
   const reload = useCallback(async (which) => {
@@ -292,6 +369,43 @@ function App() {
     } catch (err) { console.error(err); showToast(err.message || "Errore conversione"); }
   };
 
+  // ---- drag-and-drop ----
+  const handleDropOnPos = async (toPos) => {
+    if (!dragInfo) return;
+    const { playerId, fromPos } = dragInfo;
+    setDragInfo(null);
+    if (fromPos === toPos) return;
+    try {
+      await SB.movePlayer(playerId, toPos);
+      showToast(`Spostato → ${toPos}`);
+    } catch (err) { console.error(err); showToast("Errore spostamento"); }
+  };
+
+  // Map prospects to pitch positions via category. Many CSV categories don't have
+  // a 1:1 with the 11-position grid (e.g. "Mezzala" → could be RCM/LCM), so we
+  // fan out one-to-many where needed.
+  const prospectsByPos = useMemo(() => {
+    const FANOUT = {
+      "Difensore centrale mancino": ["LCB"],
+      "Difensore centrale destro":  ["RCB"],
+      "Terzino sinistro":           ["LB"],
+      "Terzino destro":             ["RB"],
+      "Play":                       ["CM"],
+      "Mezzala":                    ["LCM", "RCM"],
+      "Trequartista":               ["CM"],
+      "Ala destra":                 ["RW"],
+      "Ala sinistra":               ["LW"],
+      "Punta centrale":             ["ST"],
+      "Portiere":                   ["GK"],
+    };
+    const out = {};
+    for (const pr of prospects) {
+      const targets = FANOUT[pr.category] || [];
+      for (const k of targets) (out[k] = out[k] || []).push(pr);
+    }
+    return out;
+  }, [prospects]);
+
   const groups = [
     { title: "Attaccanti",     ids: ["LW", "ST", "RW"] },
     { title: "Centrocampisti", ids: ["LCM", "CM", "RCM"] },
@@ -372,7 +486,11 @@ function App() {
       {tab === "depth" && (
       <main className="board">
         <section className="pitch-col">
-          <Pitch roster={roster} selected={selected} onSelect={setSelected} swap={swap} />
+          <Pitch roster={roster} selected={selected} onSelect={setSelected} swap={swap}
+                 prospectsByPos={prospectsByPos}
+                 onDragPlayer={setDragInfo}
+                 onDropOnPos={handleDropOnPos}
+                 dragActive={dragInfo} />
           <div className="pitch-legend">
             <span><i className="dot dot-starter" /> Formazione titolare</span>
             <span><i className="dot dot-bench" /> Clicca un ruolo per le gerarchie</span>
@@ -392,9 +510,14 @@ function App() {
               <div className="depth-grid">
                 {g.ids.map(id => (
                   <DepthList key={id} posId={id} roster={roster}
+                             prospectsForPos={prospectsByPos[id] || []}
                              onSetStarter={setStarter}
                              onEdit={(pl)=>setEditing({...pl, position:id})}
                              onDelete={handleDelete}
+                             onConvertProspect={(pr)=>setConverting(pr)}
+                             onDragPlayer={setDragInfo}
+                             onDropOnPos={handleDropOnPos}
+                             dragActive={dragInfo}
                              highlight={selected === id}
                              editMode={editMode} />
                 ))}
