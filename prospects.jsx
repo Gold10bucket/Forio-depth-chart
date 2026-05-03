@@ -81,78 +81,23 @@ function ProspectCard({ p, onConvert, onEdit, onDelete, onStatusChange, onMoveUp
 }
 
 // ---------- prospect editor (notes / status / metadata) ----------
-const TM_SERVER = "http://localhost:7654";
-
-const EMPTY_FORM = {
-  category: "Punta centrale", name: "", birthYear: "", nationality: "",
-  heightCm: "", foot: "", currentClub: "", agent: "", minutes: "",
-  profileUrl: "", status: "monitoring", scoutNotes: "",
-};
-
 function ProspectEditor({ initial, onSave, onCancel }) {
   const isEdit = !!initial;
-
-  // step: "url" (only for new) | "form"
-  const [step, setStep] = useStateP(isEdit ? "form" : "url");
-  const [tmUrl, setTmUrl] = useStateP("");
-  const [scraping, setScraping] = useStateP(false);
-  const [scrapeError, setScrapeError] = useStateP("");
-
-  const [form, setForm] = useStateP(() =>
-    isEdit ? {
-      category:   initial.category   ?? "Punta centrale",
-      name:       initial.name       ?? "",
-      birthYear:  initial.birthYear  ?? "",
-      nationality:initial.nationality ?? "",
-      heightCm:   initial.heightCm   ?? "",
-      foot:       initial.foot       ?? "",
-      currentClub:initial.currentClub ?? "",
-      agent:      initial.agent      ?? "",
-      minutes:    initial.minutes    ?? "",
-      profileUrl: initial.profileUrl ?? "",
-      status:     initial.status     ?? "monitoring",
-      scoutNotes: initial.scoutNotes ?? "",
-    } : { ...EMPTY_FORM }
-  );
+  const [form, setForm] = useStateP(() => ({
+    category:    initial?.category    ?? "Punta centrale",
+    name:        initial?.name        ?? "",
+    birthYear:   initial?.birthYear   ?? "",
+    nationality: initial?.nationality ?? "",
+    heightCm:    initial?.heightCm    ?? "",
+    foot:        initial?.foot        ?? "",
+    currentClub: initial?.currentClub ?? "",
+    agent:       initial?.agent       ?? "",
+    minutes:     initial?.minutes     ?? "",
+    profileUrl:  initial?.profileUrl  ?? "",
+    status:      initial?.status      ?? "monitoring",
+    scoutNotes:  initial?.scoutNotes  ?? "",
+  }));
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
-
-  const fetchFromTM = async () => {
-    const url = tmUrl.trim();
-    if (!url) return;
-    setScraping(true);
-    setScrapeError("");
-    try {
-      const res = await fetch(`${TM_SERVER}/scrape?url=${encodeURIComponent(url)}`);
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      setForm({
-        category:    data.category    || "Punta centrale",
-        name:        data.name        || "",
-        birthYear:   data.birthYear   || "",
-        nationality: data.nationality || "",
-        heightCm:    data.heightCm    || "",
-        foot:        data.foot        || "",
-        currentClub: data.currentClub || "",
-        agent:       data.agent       || "",
-        minutes:     data.minutes     || "",
-        profileUrl:  data.profileUrl  || url,
-        status:      "monitoring",
-        scoutNotes:  "",
-      });
-      setStep("form");
-    } catch (err) {
-      if (err.name === "TypeError") {
-        setScrapeError("Server non raggiungibile. Avvia tm_server.py oppure inserisci manualmente.");
-      } else {
-        setScrapeError(err.message || "Errore durante lo scraping.");
-      }
-    } finally {
-      setScraping(false);
-    }
-  };
 
   const submit = (e) => {
     e.preventDefault();
@@ -173,55 +118,11 @@ function ProspectEditor({ initial, onSave, onCancel }) {
     });
   };
 
-  // ── Step 1: URL input ────────────────────────────────────────────────────
-  if (step === "url") {
-    return (
-      <div className="tm-url-step">
-        <div className="tm-url-hint">
-          Incolla il link Transfermarkt del giocatore per compilare automaticamente il profilo.
-        </div>
-        <div className="tm-url-row">
-          <input
-            className="tm-url-input"
-            type="url"
-            autoFocus
-            placeholder="https://www.transfermarkt.it/nome-giocatore/profil/spieler/123456"
-            value={tmUrl}
-            onChange={(e) => { setTmUrl(e.target.value); setScrapeError(""); }}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); fetchFromTM(); } }}
-          />
-          <button
-            className="reset-btn editor-submit tm-url-fetch"
-            type="button"
-            disabled={!tmUrl.trim() || scraping}
-            onClick={fetchFromTM}
-          >
-            {scraping ? "Recupero…" : "Recupera da TM"}
-          </button>
-        </div>
-        {scrapeError && <div className="tm-url-error">{scrapeError}</div>}
-        <button
-          className="tm-url-manual"
-          type="button"
-          onClick={() => setStep("form")}
-        >
-          Inserisci manualmente →
-        </button>
-      </div>
-    );
-  }
-
-  // ── Step 2: review / edit form ───────────────────────────────────────────
   return (
     <form className="editor-form editor-form-wide" onSubmit={submit}>
-      {!isEdit && (
-        <button type="button" className="tm-url-back" onClick={() => setStep("url")}>
-          ← Modifica link TM
-        </button>
-      )}
       <div className="editor-row">
         <label>Categoria</label>
-        <select value={form.category} onChange={set("category")} autoFocus={isEdit}>
+        <select value={form.category} onChange={set("category")}>
           {Object.keys(SB.CATEGORY_TO_POSITION).map(c =>
             <option key={c} value={c}>{c}</option>
           )}
